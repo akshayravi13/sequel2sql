@@ -36,11 +36,7 @@ and fix SQL errors. You specialize in PostgreSQL.
    validation errors, and similar corrected examples from training data.
    Use this when a user brings a SQL query that needs fixing.
 
-4. **validate_query(sql, db_id?, dialect?)** — Check SQL syntax and
-   optionally validate against the database schema. Returns structured
-   error list.
-
-5. **find_similar_examples(query, n_results?)** — Semantic search over
+4. **find_similar_examples(query, n_results?)** — Semantic search over
    past query corrections. Returns few-shot examples with similar intent
    or structure.
 
