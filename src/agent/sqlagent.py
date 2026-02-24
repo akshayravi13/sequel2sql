@@ -269,27 +269,27 @@ def execute_sql_query(ctx: RunContext[AgentDeps], sql: str) -> DBQueryResponse:
 #     )
 
 
-@agent.tool_plain
-def similar_examples_tool(
-    query: str,
-    n_results: int = 6,
-) -> FewShotExamplesResult:
-    """
-        Find similar SQL query examples from the training database
-        using semantic search.
-
-    Use this tool to:
-    - Find examples of similar queries that were previously corrected
-    - Get context for how similar errors were fixed
-    - Retrieve queries with similar intent/structure
-
-        Returns structurally diverse few-shot examples with metadata.
-    """
-    examples = find_similar_examples(query, n_results=n_results)
-    return FewShotExamplesResult(
-        examples=examples,
-        query_intent=query,
-    )
+# @agent.tool_plain
+# def similar_examples_tool(
+#     query: str,
+#     n_results: int = 6,
+# ) -> FewShotExamplesResult:
+#     """
+#         Find similar SQL query examples from the training database
+#         using semantic search.
+#
+#     Use this tool to:
+#     - Find examples of similar queries that were previously corrected
+#     - Get context for how similar errors were fixed
+#     - Retrieve queries with similar intent/structure
+#
+#         Returns structurally diverse few-shot examples with metadata.
+#     """
+#     examples = find_similar_examples(query, n_results=n_results)
+#     return FewShotExamplesResult(
+#         examples=examples,
+#         query_intent=query,
+#     )
 
 
 # =============================================================================
@@ -523,7 +523,7 @@ def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> 
 
 webui_agent.tool(name="execute_sql_query", retries=3)(execute_sql_query)
 # webui_agent.tool(name="validate_query")(validate_query)
-webui_agent.tool_plain(name="find_similar_examples")(similar_examples_tool)
+# webui_agent.tool_plain(name="find_similar_examples")(similar_examples_tool)
 webui_agent.tool(name="analyze_and_fix_sql")(analyze_and_fix_sql)
 webui_agent.tool(name="describe_database_schema")(describe_database_schema)
 webui_agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)

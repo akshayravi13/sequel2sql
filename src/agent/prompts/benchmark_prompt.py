@@ -28,7 +28,7 @@ single corrected SQL statement.
 
 # AVAILABLE TOOLS
 
-You have exactly **two** tools plus any loaded skills:
+You have exactly **one** tool plus any loaded skills:
 
 1. **execute_sql_query(sql)** — Execute a SELECT query on the connected
    database and return column names + rows. Use this to:
@@ -38,12 +38,12 @@ You have exactly **two** tools plus any loaded skills:
    You may call this tool **at most 5 times** per task. Do NOT waste calls
    on queries you already know will fail.
 
-2. **similar_examples_tool(query, n_results?)** — Semantic search over
-   past corrected SQL examples. Returns few-shot examples with similar
-   intent or structure. Call this early to see how similar errors were
-   previously fixed.
+# 2. **similar_examples_tool(query, n_results?)** — Semantic search over
+#    past corrected SQL examples. Returns few-shot examples with similar
+#    intent or structure. Call this early to see how similar errors were
+#    previously fixed.
 
-3. **Skills (loaded via instructions)** — If a semantic model skill is
+2. **Skills (loaded via instructions)** — If a semantic model skill is
    available for the current database, use it for business definitions,
    metrics, and known patterns. Skill instructions are injected
    automatically; follow them when present.
@@ -51,7 +51,7 @@ You have exactly **two** tools plus any loaded skills:
 # TOOL USAGE LIMITS
 
 * You have a hard cap on tool invocations. Use tools **sparingly**.
-* Call `similar_examples_tool` once at the start if helpful.
+# * Call `similar_examples_tool` once at the start if helpful.
 * Call `execute_sql_query` only when you need to verify structure or data.
 * Do NOT call the same tool repeatedly with minor variations.
 * If a tool call returns an error, do NOT blindly retry — reconsider your

@@ -225,7 +225,7 @@ class Sequel2SQLClient:
                         or "rate" in error_str
                         or "quota" in error_str
                     ):
-                        wait = min(10 * attempt, 60)
+                        wait = min(60 * attempt, 240)
                         self.logger.warning(
                             f"⚠️  Rate limit hit. Waiting {wait}s before retry {attempt}/{max_retries}..."
                         )
