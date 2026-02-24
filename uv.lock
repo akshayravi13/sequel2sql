@@ -3085,6 +3085,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-ai-skills"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "pydantic-ai-slim" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/11/2b/b2011be2e17a643dfcadc1dfb2ab0b26ef5bbe2185b9098d3ec98c7e87d2/pydantic_ai_skills-0.4.0.tar.gz", hash = "sha256:67803b71cc78672fd36f72c92b5f58210ad31102517e7fa5a33b16e5fc7bd5a8", size = 587348, upload-time = "2026-01-24T15:16:13.287Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/65/9c/152a243b87c9debf916fdac77b94d8e3b3633f56a31d2643cd84d0a25972/pydantic_ai_skills-0.4.0-py3-none-any.whl", hash = "sha256:f21cabc104537d4b2f3de6c23b16ad83110643cbe5f518ea4fe687fe1fa4a2ad", size = 31261, upload-time = "2026-01-24T15:16:11.273Z" },
+]
+
+[[package]]
 name = "pydantic-ai-slim"
 version = "1.56.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4013,6 +4027,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
+    { name = "pydantic-ai-skills" },
     { name = "pydantic-ai-slim", extra = ["google", "mistral", "web"] },
     { name = "pyfiglet" },
     { name = "pymysql" },
@@ -4046,6 +4061,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-ai", specifier = ">=1.51.0" },
+    { name = "pydantic-ai-skills", specifier = ">=0.1.1" },
     { name = "pydantic-ai-slim", extras = ["google", "mistral", "web"], specifier = ">=1.51.0" },
     { name = "pyfiglet", specifier = ">=1.0.4" },
     { name = "pymysql", specifier = ">=1.1.0" },
