@@ -18,9 +18,17 @@ from pathlib import Path
 from typing import Any, Dict
 
 import logfire
+from pydantic_ai.exceptions import UsageLimitExceeded
+from pydantic_ai.usage import UsageLimits
 from sqlalchemy import text
 
 from .logger_config import get_logger
+
+# ---------------------------------------------------------------------------
+# Benchmark agent limits — prevent runaway tool-calling loops
+# ---------------------------------------------------------------------------
+BENCHMARK_REQUEST_LIMIT = 10   # max LLM round-trips per query
+BENCHMARK_TOOL_CALLS_LIMIT = 8  # max successful tool invocations per query
 
 # I have no idea what any of the below code below means, I did not create this import mess and I am not going to bother trying to fix it.
 
@@ -137,6 +145,10 @@ class Sequel2SQLClient:
         )
 
         last_error = None
+        usage_limits = UsageLimits(
+            request_limit=BENCHMARK_REQUEST_LIMIT,
+            tool_calls_limit=BENCHMARK_TOOL_CALLS_LIMIT,
+        )
 
         with logfire.span(
             "benchmark.sequel2sql",
@@ -160,9 +172,12 @@ class Sequel2SQLClient:
                         _execute_raw_statements(deps.database.engine, preprocess_sql)
 
                     try:
-                        # Run the full agent pipeline (tools: schema lookup,
-                        # validation, few-shot retrieval, SQL analysis)
-                        result = agent.run_sync(user_message, deps=deps)
+                        # Run the agent pipeline with capped tool usage
+                        result = agent.run_sync(
+                            user_message,
+                            deps=deps,
+                            usage_limits=usage_limits,
+                        )
                     finally:
                         # Clean up temp objects so the DB is restored for
                         # the evaluation phase (which re-runs preprocess_sql itself)
@@ -181,8 +196,18 @@ class Sequel2SQLClient:
 
                     self.successful_requests += 1
                     span.set_attribute("attempts", attempt)
-                    time.sleep(2)  # respect 1 req/sec rate limit
+                    time.sleep(2)  # respect rate limits
                     return str(result.output)
+
+                except UsageLimitExceeded as e:
+                    # Agent exhausted its tool-call / request budget.
+                    # This is NOT a transient error — retrying will hit
+                    # the same limit. Treat as a hard failure.
+                    self.logger.warning(
+                        f"⚠️  Usage limit exceeded for {db_id}: {e}"
+                    )
+                    last_error = e
+                    break  # skip retries
 
                 except Exception as e:
                     last_error = e
@@ -191,12 +216,16 @@ class Sequel2SQLClient:
                     )
                     error_str = str(e).lower()
 
+                    # Exponential backoff: base 2s, doubles each attempt,
+                    # capped at 60s
+                    backoff = min(2 ** attempt, 60)
+
                     if (
                         "429" in error_str
                         or "rate" in error_str
                         or "quota" in error_str
                     ):
-                        wait = 10 * attempt
+                        wait = min(10 * attempt, 60)
                         self.logger.warning(
                             f"⚠️  Rate limit hit. Waiting {wait}s before retry {attempt}/{max_retries}..."
                         )
@@ -207,21 +236,21 @@ class Sequel2SQLClient:
                         or "server" in error_str
                     ):
                         self.logger.warning(
-                            f"⚠️  Server error. Waiting 5s before retry {attempt}/{max_retries}..."
+                            f"⚠️  Server error. Waiting {backoff}s before retry {attempt}/{max_retries}..."
                         )
-                        time.sleep(5)
+                        time.sleep(backoff)
                     elif attempt < max_retries:
-                        time.sleep(2)
+                        time.sleep(backoff)
 
             self.failed_requests += 1
-            span.set_attribute("attempts", max_retries)
+            span.set_attribute("attempts", attempt)
             span.set_attribute("error", str(last_error)[:240])
             self.logger.error(
-                f"❌ Pipeline call failed after {max_retries} attempts. "
+                f"❌ Pipeline call failed after {attempt} attempt(s). "
                 f"Last error: {str(last_error)[:120]}"
             )
             raise RuntimeError(
-                f"Pipeline call failed after {max_retries} retries: {last_error}"
+                f"Pipeline call failed after {attempt} attempt(s): {last_error}"
             )
 
     def get_statistics(self) -> Dict[str, Any]:

@@ -292,7 +292,11 @@ def similar_examples_tool(
     )
 
 
-@agent.tool
+# =============================================================================
+# analyze_and_fix_sql — DISABLED on benchmark agent.
+# This heavy orchestration tool is only needed for the webui agent.
+# It is re-registered on webui_agent at the bottom of this file.
+# =============================================================================
 def analyze_and_fix_sql(
     ctx: RunContext[AgentDeps],
     issue_sql: str,
@@ -415,7 +419,8 @@ def analyze_and_fix_sql(
     )
 
 
-@agent.tool
+# describe_database_schema — DISABLED on benchmark agent.
+# Schema is pre-processed in benchmark data. Re-registered on webui_agent below.
 def describe_database_schema(
     ctx: RunContext[AgentDeps],
     table_names: list[str] | None = None,
@@ -441,7 +446,8 @@ def describe_database_schema(
     )
 
 
-@agent.tool_plain
+# get_error_taxonomy_skill — DISABLED on benchmark agent.
+# Re-registered on webui_agent below.
 def get_error_taxonomy_skill(error_category: str) -> str:
     """
     Look up best-practice approaches for fixing a SQL error of
@@ -460,7 +466,8 @@ def get_error_taxonomy_skill(error_category: str) -> str:
 
 
 
-@agent.tool_plain
+# save_confirmed_fix_tool — DISABLED on benchmark agent.
+# Re-registered on webui_agent below.
 def save_confirmed_fix_tool(input: SaveConfirmedFixInput) -> str:
     """
     Persist a user-confirmed SQL fix to the database-specific knowledge store.
@@ -496,7 +503,8 @@ class FindSimilarConfirmedFixesInput(BaseModel):
     intent: str
     database: str
 
-@agent.tool_plain
+# find_similar_confirmed_fixes_tool — DISABLED on benchmark agent.
+# Re-registered on webui_agent below.
 def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> str:
     """
     Search for user-confirmed SQL fixes for this specific database based on the query intent.
