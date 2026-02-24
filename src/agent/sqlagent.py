@@ -53,6 +53,15 @@ logfire.configure(send_to_logfire="if-token-present")
 logfire.instrument_pydantic_ai()
 
 # =============================================================================
+# Skills Configuration
+# =============================================================================
+
+from src.agent.skills_config import (  # noqa: E402
+	get_db_skill_hint,
+	skills_toolset,
+)
+
+# =============================================================================
 # Helper Functions
 # =============================================================================
 
@@ -185,16 +194,18 @@ class SQLAnalysisContext(BaseModel):
 
 # Default agent
 agent = Agent(
-    DEFAULT_MODEL,
-    deps_type=AgentDeps,
-    system_prompt=BENCHMARK_PROMPT,
+	DEFAULT_MODEL,
+	deps_type=AgentDeps,
+	system_prompt=BENCHMARK_PROMPT,
+	toolsets=[skills_toolset],
 )
 
 # Web UI agent
 webui_agent = Agent(
-    DEFAULT_MODEL,
-    deps_type=AgentDeps,
-    system_prompt=WEBUI_PROMPT,
+	DEFAULT_MODEL,
+	deps_type=AgentDeps,
+	system_prompt=WEBUI_PROMPT,
+	toolsets=[skills_toolset],
 )
 
 SYNTAX_FIXER_PROMPT = (
@@ -390,6 +401,25 @@ webui_agent.tool_plain(name="validate_query")(validate_query)
 webui_agent.tool_plain(name="find_similar_examples")(similar_examples_tool)
 webui_agent.tool(name="analyze_and_fix_sql")(analyze_and_fix_sql)
 webui_agent.tool(name="describe_database_schema")(describe_database_schema)
+
+
+# =============================================================================
+# Skills Instructions
+# =============================================================================
+
+
+@agent.instructions
+async def agent_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
+	base = await skills_toolset.get_instructions(ctx) or ""
+	hint = get_db_skill_hint(ctx.deps.database.database_name)
+	return base + hint
+
+
+@webui_agent.instructions
+async def webui_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
+	base = await skills_toolset.get_instructions(ctx) or ""
+	hint = get_db_skill_hint(ctx.deps.database.database_name)
+	return base + hint
 
 
 # =============================================================================
