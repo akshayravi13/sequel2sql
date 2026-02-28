@@ -22,6 +22,10 @@ PROVIDERS = {
         "model_id": "mistral:mistral-large-latest",
         "display_name": "Mistral Large Latest",
     },
+    "codestral": {
+        "model_id": "mistral:codestral-latest",
+        "display_name": "Codestral Latest",
+    },
     "sequel2sql": {
         "model_id": "sequel2sql:pipeline",
         "display_name": "Sequel2SQL Pipeline",
@@ -66,6 +70,7 @@ def load_api_key(provider: str) -> str:
     env_var_map = {
         "google": "GOOGLE_API_KEY",
         "mistral": "MISTRAL_API_KEY",
+        "codestral": "MISTRAL_API_KEY",
     }
 
     env_var = env_var_map.get(provider)

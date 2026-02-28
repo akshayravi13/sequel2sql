@@ -48,6 +48,7 @@ load_dotenv()
 SUPPORTED_MODELS = {
     "mistral": "mistral:mistral-large-latest",
     "google": "google-gla:gemini-3-flash-preview",
+    "codestral": "mistral:codestral-latest",
 }
 DEFAULT_MODEL = "mistral:mistral-large-latest"
 
@@ -231,7 +232,7 @@ syntax_fixer_agent = Agent(
 # =============================================================================
 
 
-@agent.tool(retries=3)
+@agent.tool()
 def execute_sql_query(ctx: RunContext[AgentDeps], sql: str) -> DBQueryResponse:
     """Execute the given SQL SELECT query on the connected database and return the result.
 
