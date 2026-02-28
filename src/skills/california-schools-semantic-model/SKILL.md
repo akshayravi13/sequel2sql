@@ -1,6 +1,6 @@
 ---
-name: california-schools-template-semantic-model
-description: Semantic model for the california_schools_template database. Contains business term definitions, metric formulas, known query patterns, and critical gotchas for the California Schools dataset (FRPM eligibility, SAT scores, district/school hierarchy). Load this skill when the user is querying the california_schools_template database.
+name: california-schools-semantic-model
+description: Semantic model for the california_schools database. Contains business term definitions, metric formulas, known query patterns, and critical gotchas for the California Schools dataset (FRPM eligibility, SAT scores, district/school hierarchy). Load this skill when the user is querying the california_schools database.
 metadata:
   author: manual
   version: "1.1"
