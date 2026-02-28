@@ -71,7 +71,7 @@ def validate(
         silent_errors = _detect_silent_fixes(sql)
         metadata = analyze_query(ast)
         if schema is not None:
-            schema_errors = _check_schema(ast, schema)
+            schema_errors = _check_schema(ast, schema, sql)
 
     all_errors = syntax_errors + silent_errors + schema_errors
     return ValidationResult(
@@ -136,12 +136,22 @@ def validate_with_db(
     # ── 4. AST schema check (precise, only when AST is good) ─────────────────
     ast_schema_errors: List[ValidationError] = []
     if ast is not None:
-        ast_schema_errors = _check_schema(ast, live_schema)
+        ast_schema_errors = _check_schema(ast, live_schema, sql)
 
     # ── 5. EXPLAIN — DB-native first error ───────────────────────────────────
     db_errors = _explain(sql, engine)
 
-    # ── 6. Merge, deduplicate by (tag, context) ───────────────────────────────
+    # ── 6. EXPLAIN-success suppression ────────────────────────────────────────
+    # If EXPLAIN says the query is valid, the static schema checks may have
+    # produced false positives (e.g. CTE-output columns, table-valued
+    # functions).  PostgreSQL is the ground truth — drop schema errors.
+    # Syntax and silent errors are kept: they flag style issues (trailing
+    # commas, etc.) that PostgreSQL silently accepts but are still wrong.
+    if not db_errors:
+        ast_schema_errors = []
+        token_schema_errors = []
+
+    # ── 7. Merge, deduplicate by (tag, context) ───────────────────────────────
     # Priority: EXPLAIN > AST-schema > token-schema > syntax > silent
     all_errors = _merge_errors(
         db_errors,
@@ -170,11 +180,28 @@ def _parse_with_recovery(
     retry with ErrorLevel.WARN to get a partial AST so that schema checks can
     still run on the remainder of the query.
 
+    Supports multi-statement SQL (e.g. ``DROP TABLE ...; CREATE TABLE ...``)
+    by using ``sqlglot.parse()`` which returns a list of ASTs.  The first
+    non-DDL AST is returned for schema checking (DDL like CREATE/DROP doesn't
+    need column-level validation).
+
     Returns: (ast_or_None, syntax_errors)
     """
     try:
-        ast = sqlglot.parse_one(sql, read=dialect, error_level=ErrorLevel.RAISE)
-        return ast, []
+        # parse() returns List[Optional[Expression]]
+        asts = sqlglot.parse(sql, read=dialect, error_level=ErrorLevel.RAISE)
+        # Pick the best AST for schema checking: prefer SELECT/DML over DDL
+        best = None
+        for a in asts:
+            if a is None:
+                continue
+            if best is None:
+                best = a
+            # Prefer non-DDL (SELECT, INSERT, UPDATE, DELETE) for schema checks
+            if not isinstance(a, (exp.Create, exp.Drop, exp.Command)):
+                best = a
+                break
+        return best, []
     except ParseError as exc:
         syntax_errors = _classify_parse_error(sql, exc)
     except Exception as exc:
@@ -182,7 +209,17 @@ def _parse_with_recovery(
 
     # Recovery attempt — get a partial AST even though syntax is broken
     try:
-        ast = sqlglot.parse_one(sql, read=dialect, error_level=ErrorLevel.WARN)
+        asts = sqlglot.parse(sql, read=dialect, error_level=ErrorLevel.WARN)
+        best = None
+        for a in asts:
+            if a is None:
+                continue
+            if best is None:
+                best = a
+            if not isinstance(a, (exp.Create, exp.Drop, exp.Command)):
+                best = a
+                break
+        ast = best
     except Exception:
         ast = None
 
@@ -225,6 +262,7 @@ def _detect_silent_fixes(sql: str) -> List[ValidationError]:
 def _check_schema(
     ast: exp.Expression,
     schema: Dict[str, Dict[str, str]],
+    sql: str = "",
 ) -> List[ValidationError]:
     """
     Check table and column references against the schema dict.
@@ -249,6 +287,9 @@ def _check_schema(
         t.lower(): {c.lower(): c for c in cols} for t, cols in schema.items()
     }
 
+    # ── PostgreSQL system schemas — never flag as hallucinated ─────────────────
+    _PG_SYSTEM_PREFIXES = ("pg_", "information_schema")
+
     # ── Collect CTE aliases so they are never flagged as missing tables ────────
     cte_aliases: Set[str] = set()
     for cte_node in ast.find_all(exp.CTE):
@@ -261,20 +302,59 @@ def _check_schema(
             cte_aliases.add(sq_node.alias.lower())
 
     # ── Alias map: {alias_or_table_lower -> real_table_lower} ─────────────────
+    # All tables (including those inside CTEs) for resolving qualified refs.
     alias_map: Dict[str, str] = {}
+    # All table/subquery aliases (used to skip whole-row alias refs like
+    # row_to_json(alias) where sqlglot parses 'alias' as a Column).
+    all_table_aliases: Set[str] = set()
+    # Inline column definitions from SRFs and VALUES (e.g. AS j(element))
+    # These are dynamically-named columns valid in their scope.
+    inline_columns: Set[str] = set()
+    # Tables referenced in the OUTER query only (not inside CTE bodies).
+    outer_tables: Set[str] = set()
     for table_node in ast.find_all(exp.Table):
         real = table_node.name.lower()
         if real:
             alias_map[real] = real
-        if table_node.alias:
-            alias_map[table_node.alias.lower()] = real
+        ta = table_node.args.get("alias")
+        if ta:
+            alias_map[ta.alias.lower()] = real
+            all_table_aliases.add(ta.alias.lower())
+            # Collect inline column defs: AS j(element, value, ...)
+            for col_id in ta.args.get("columns") or []:
+                if isinstance(col_id, exp.Identifier):
+                    inline_columns.add(col_id.name.lower())
+        # Track whether this table ref is in the outer query
+        if real and not table_node.find_ancestor(exp.CTE):
+            outer_tables.add(real)
+    # Also include subquery aliases and their inline columns
+    for sq_node in ast.find_all(exp.Subquery):
+        ta = sq_node.args.get("alias")
+        if ta:
+            all_table_aliases.add(ta.alias.lower())
+            for col_id in ta.args.get("columns") or []:
+                if isinstance(col_id, exp.Identifier):
+                    inline_columns.add(col_id.name.lower())
 
     # ── 1. Table existence ────────────────────────────────────────────────────
-    missing_tables: List[str] = []
+    missing_tables_lower: Set[str] = set()
     for table_node in ast.find_all(exp.Table):
         t = table_node.name.lower()
-        if t and t not in schema_lower and t not in cte_aliases:
-            missing_tables.append(table_node.name)
+        if not t:
+            continue
+        # Skip tables inside DDL statements (CREATE FUNCTION, CREATE VIEW, etc.)
+        if table_node.find_ancestor(exp.Create, exp.Command):
+            continue
+        # Skip PostgreSQL system tables / schemas
+        if any(t.startswith(p) for p in _PG_SYSTEM_PREFIXES):
+            continue
+        # Skip if the table's schema qualifier is a system schema
+        table_db = table_node.args.get("db")
+        if table_db and isinstance(table_db, exp.Identifier):
+            if any(table_db.name.lower().startswith(p) for p in _PG_SYSTEM_PREFIXES):
+                continue
+        if t not in schema_lower and t not in cte_aliases:
+            missing_tables_lower.add(t)
             errors.append(
                 ValidationError(
                     tag=ErrorTag.HALLUCINATION_TABLE,
@@ -284,25 +364,65 @@ def _check_schema(
                 )
             )
 
-    if missing_tables:
-        # Column checks are unreliable when tables themselves are wrong
-        return errors
-
     # ── 2. Column references ──────────────────────────────────────────────────
-    # Collect the set of all table names referenced in the query (lower)
-    referenced_tables: Set[str] = set(alias_map.values())
+    # Only check unqualified columns against outer-query schema tables.
+    # CTE/subquery aliases and missing tables are excluded.
+    schema_tables: Set[str] = {
+        t for t in outer_tables
+        if t in schema_lower and t not in missing_tables_lower
+    }
+
+    # ── Collect SELECT-level aliases (e.g. `COUNT(x) AS answered`) ────────────
+    # These are valid column references in ORDER BY, HAVING, etc.
+    select_aliases: Set[str] = set()
+    for select_node in ast.find_all(exp.Select):
+        for sel_expr in select_node.expressions:
+            if isinstance(sel_expr, exp.Alias) and sel_expr.alias:
+                select_aliases.add(sel_expr.alias.lower())
 
     for col_node in ast.find_all(exp.Column):
+        # Skip literal * (e.g. SELECT t.* — sqlglot parses * as Column name)
+        if col_node.name == "*":
+            continue
+        # Skip columns inside CTE definitions — they reference
+        # CTE-scoped expressions, not base schema columns
+        if col_node.find_ancestor(exp.CTE):
+            continue
+
         col_name: str = col_node.name  # bare column string, original case
         qualifier: str = col_node.table  # syntactic qualifier (alias/table), if any
 
         col_lower = col_name.lower()
+
+        # Skip references to SELECT-level aliases (e.g. ORDER BY answered)
+        if col_lower in select_aliases:
+            continue
+
+        # Skip inline column defs from SRFs/VALUES (e.g. AS j(element))
+        if col_lower in inline_columns:
+            continue
+
+        # Skip template variables (${var}) that sqlglot misparses as columns
+        if f"${{{col_name}}}" in sql or f"${{{col_lower}}}" in sql:
+            continue
+
+        # Skip whole-row table alias references (e.g. row_to_json(alias))
+        if not qualifier and col_lower in all_table_aliases:
+            continue
+        if not qualifier and col_lower in cte_aliases:
+            continue
 
         if qualifier:
             # Qualified reference: resolve alias → real table
             resolved = alias_map.get(qualifier.lower())
             if resolved is None or qualifier.lower() in cte_aliases:
                 # Unknown qualifier or CTE/subquery alias — skip
+                continue
+            if resolved in cte_aliases:
+                # Resolved table is a CTE — can't validate its columns statically
+                continue
+            if resolved in missing_tables_lower:
+                # Table is already flagged as missing — skip its columns
                 continue
             table_cols = schema_lower.get(resolved, {})
             if col_lower not in table_cols:
@@ -319,10 +439,18 @@ def _check_schema(
                     )
                 )
         else:
-            # Unqualified reference: column must exist in at least one
-            # referenced table
-            found = any(col_lower in schema_lower.get(t, {}) for t in referenced_tables)
-            if not found:
+            # Unqualified reference: check against schema tables only
+            # (not CTE/subquery aliases which aren't in the schema)
+            if not schema_tables:
+                # All referenced tables are CTEs/subqueries — can't validate
+                continue
+
+            found_in = [
+                t for t in schema_tables
+                if col_lower in schema_lower.get(t, {})
+            ]
+
+            if not found_in:
                 clause = _clause_of(col_node)
                 errors.append(
                     ValidationError(
@@ -330,6 +458,19 @@ def _check_schema(
                         message=(
                             f"Column '{col_name}' does not exist in any "
                             f"referenced table"
+                        ),
+                        context=col_name,
+                        affected_clauses=[clause] if clause else [],
+                    )
+                )
+            elif len(found_in) > 1:
+                clause = _clause_of(col_node)
+                errors.append(
+                    ValidationError(
+                        tag=ErrorTag.AMBIGUOUS_COLUMN,
+                        message=(
+                            f"Column '{col_name}' is ambiguous — exists in "
+                            f"tables: {', '.join(found_in)}"
                         ),
                         context=col_name,
                         affected_clauses=[clause] if clause else [],
