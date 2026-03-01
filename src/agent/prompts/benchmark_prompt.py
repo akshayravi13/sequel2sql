@@ -62,10 +62,16 @@ Read each section carefully:
    re-discover schema you already have; do NOT waste calls on queries you
    know will fail.
 
-2. **Skills (loaded via instructions)** — If a semantic model skill is
-   available for the current database, call `load_skill('<db>-semantic-model')`
-   **before writing any SQL** to load business definitions, known join paths,
-   and column gotchas.
+2. **find_similar_confirmed_fixes_tool(intent, database)** — Search the
+   confirmed-fixes knowledge base for this database. Returns previously
+   validated (intent → error_sql → corrected_sql → explanation) entries that
+   are semantically similar to the current query intent.
+   - Call this tool **before writing your corrected SQL** with the user's
+     natural-language intent and the database name.
+   - If relevant fixes are returned, study the error patterns and corrections
+     carefully — they are real, human-confirmed fixes on this exact schema.
+   - Use the returned examples to guide your fix strategy, especially when
+     the error pattern is similar.
 
 # FIXING STRATEGY
 

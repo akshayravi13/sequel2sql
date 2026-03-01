@@ -179,17 +179,15 @@ def find_similar_confirmed_fixes(
         
         for doc, meta, dist, doc_id in zip(docs, metas, dists, ids):
             similarity = 1.0 - dist
-            # Only return candidates with similarity >= 0.75
-            if similarity >= 0.75:
-                candidates.append(
-                    {
-                        "intent": doc,
-                        "error_sql": meta.get("error_sql", ""),
-                        "corrected_sql": meta.get("corrected_sql", ""),
-                        "explanation": meta.get("explanation", ""),
-                        "similarity": round(similarity, 4),
-                    }
-                )
+            candidates.append(
+                {
+                    "intent": doc,
+                    "error_sql": meta.get("error_sql", ""),
+                    "corrected_sql": meta.get("corrected_sql", ""),
+                    "explanation": meta.get("explanation", ""),
+                    "similarity": round(similarity, 4),
+                }
+            )
         # Best-effort increment usage_count
         if ids_to_increment:
             try:

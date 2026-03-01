@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-from src.db_confirmed_fixes.store import find_similar_confirmed_fixes, save_confirmed_fix
+from src.db_confirmed_fixes.retriever import find_similar_confirmed_fixes, save_confirmed_fix
 
 # Add both project root and src/ to sys.path for imports to work
 project_root = Path(__file__).parent.parent.parent
@@ -510,8 +510,7 @@ class FindSimilarConfirmedFixesInput(BaseModel):
     intent: str
     database: str
 
-# find_similar_confirmed_fixes_tool — DISABLED on benchmark agent.
-# Re-registered on webui_agent below.
+# find_similar_confirmed_fixes_tool — registered on both benchmark and webui agents.
 def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> str:
     """
     Search for user-confirmed SQL fixes for this specific database based on the query intent.
@@ -536,6 +535,7 @@ webui_agent.tool(name="describe_database_schema")(describe_database_schema)
 webui_agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
 webui_agent.tool_plain(name="save_confirmed_fix_tool")(save_confirmed_fix_tool)
 webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
+agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
 
 
 # =============================================================================
