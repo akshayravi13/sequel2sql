@@ -1,6 +1,6 @@
 ---
 name: card-games-semantic-model
-description: Semantic model for the card_games database (Magic: The Gathering card data). Contains definitions for cards, sets, legalities, rulings, and foreign language data. Load this skill when the user is querying the card_games database.
+description: "Semantic model for the card_games database (Magic: The Gathering card data). Contains definitions for cards, sets, legalities, rulings, and foreign language data. Load this skill when the user is querying the card_games database."
 metadata:
   author: manual
   version: "1.1"

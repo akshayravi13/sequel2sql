@@ -62,7 +62,7 @@ logfire.instrument_pydantic_ai()
 # =============================================================================
 
 from src.agent.skills_config import (  # noqa: E402
-	get_db_skill_hint,
+	get_db_skill_instructions,
 	skills_toolset,
 )
 
@@ -196,12 +196,13 @@ class SQLAnalysisContext(BaseModel):
 # Agent Definition
 # =============================================================================
 
-# Default agent
+# Default agent — lower temperature for deterministic tool-following behavior
 agent = Agent(
 	DEFAULT_MODEL,
 	deps_type=AgentDeps,
 	system_prompt=BENCHMARK_PROMPT,
 	toolsets=[skills_toolset],
+	model_settings={"temperature": 0.2},
 )
 
 # Web UI agent
@@ -539,16 +540,12 @@ webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_co
 
 @agent.instructions
 async def agent_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
-	base = await skills_toolset.get_instructions(ctx) or ""
-	hint = get_db_skill_hint(ctx.deps.database.database_name)
-	return base + hint
+	return get_db_skill_instructions(ctx.deps.database.database_name)
 
 
 @webui_agent.instructions
 async def webui_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
-	base = await skills_toolset.get_instructions(ctx) or ""
-	hint = get_db_skill_hint(ctx.deps.database.database_name)
-	return base + hint
+	return get_db_skill_instructions(ctx.deps.database.database_name)
 
 
 # =============================================================================

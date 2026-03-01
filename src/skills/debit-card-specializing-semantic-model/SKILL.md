@@ -1,5 +1,5 @@
 ---
-name: debit-card-semantic-model
+name: debit-card-specializing-semantic-model
 description: Semantic model for the debit_card_specializing database (Czech fuel card transactions — gas stations, customers, products, monthly aggregates). Load this skill when the user is querying the debit_card_specializing database.
 metadata:
   author: manual

@@ -1,5 +1,5 @@
 ---
-name: european-football-semantic-model
+name: european-football-2-semantic-model
 description: Semantic model for the european_football_2 database (Kaggle European Soccer dataset — matches, players, teams, leagues across 11 European countries). Load this skill when the user is querying the european_football_2 database.
 metadata:
   author: manual

@@ -1,5 +1,5 @@
 ---
-name: formula1-semantic-model
+name: formula-1-semantic-model
 description: Semantic model for the formula_1 database (Ergast F1 historical dataset — races, drivers, constructors, results, qualifying, pit stops, lap times). Load this skill when the user is querying the formula_1 database.
 metadata:
   author: manual
