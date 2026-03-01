@@ -57,12 +57,10 @@ Read each section carefully:
 1. **execute_sql_query(sql)** — Execute a SELECT query and return column names
    + rows. Use this to:
    - Verify your corrected query produces sensible results
-   - Confirm join paths, filter results, or check column value formats
-   Use it freely to verify your fix — a hard cap of 5 exists only to prevent
-   runaway loops, not as a budget to conserve. Do NOT re-discover schema
-   already provided; do NOT run queries you know will fail.
-   **If you are not confident your fix is correct, verify with this tool
-   before outputting your final answer.**
+   - Check a column's values or data format when sample rows are insufficient
+   You may call this tool **at most 3 times** per task. Do NOT use it to
+   re-discover schema you already have; do NOT waste calls on queries you
+   know will fail.
 
 2. **Skills (loaded via instructions)** — If a semantic model skill is
    available for the current database, call `load_skill('<db>-semantic-model')`

@@ -196,13 +196,12 @@ class SQLAnalysisContext(BaseModel):
 # Agent Definition
 # =============================================================================
 
-# Default agent — lower temperature for deterministic tool-following behavior
+# Default agent
 agent = Agent(
 	DEFAULT_MODEL,
 	deps_type=AgentDeps,
 	system_prompt=BENCHMARK_PROMPT,
 	toolsets=[skills_toolset],
-	model_settings={"temperature": 0.2},
 )
 
 # Web UI agent
