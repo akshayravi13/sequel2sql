@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import logfire
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
 from src.db_skills.store import find_similar_confirmed_fixes, save_confirmed_fix
@@ -147,6 +147,11 @@ class FewShotExamplesResult(BaseModel):
 #     explanation: str = Field(..., description="Explanation of what was fixed and why")
 
 
+class BenchmarkOutput(BaseModel):
+	"""Structured output for the benchmark agent — one SQL query, no explanation."""
+	sql: str = Field(description="The corrected PostgreSQL query. Raw SQL only — no commentary.")
+
+
 class SchemaDescription(BaseModel):
     """Database schema information returned by describe_database_schema tool."""
 
@@ -200,6 +205,7 @@ class SQLAnalysisContext(BaseModel):
 agent = Agent(
 	DEFAULT_MODEL,
 	deps_type=AgentDeps,
+	output_type=BenchmarkOutput,
 	system_prompt=BENCHMARK_PROMPT,
 	toolsets=[skills_toolset],
 )

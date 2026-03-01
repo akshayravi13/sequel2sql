@@ -96,11 +96,6 @@ Follow this order of reasoning:
 
 # OUTPUT FORMAT
 
-Your ENTIRE response must be exactly one fenced SQL block.
-
-```sql
-<your corrected SQL here>
-```
-
-No text before or after the fence. No explanation. No table results. Just SQL.
+Output ONLY the corrected SQL query — no explanation, no commentary, nothing else.
+One query. Raw SQL. That is all.
 """

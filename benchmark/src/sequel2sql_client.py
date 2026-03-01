@@ -197,7 +197,7 @@ class Sequel2SQLClient:
                     self.successful_requests += 1
                     span.set_attribute("attempts", attempt)
                     time.sleep(2)  # respect rate limits
-                    return str(result.output)
+                    return f"```sql\n{result.output.sql}\n```"
 
                 except UsageLimitExceeded as e:
                     # Agent exhausted its tool-call / request budget.
