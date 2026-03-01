@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-from src.db_skills.store import find_similar_confirmed_fixes, save_confirmed_fix
+from src.db_confirmed_fixes.store import find_similar_confirmed_fixes, save_confirmed_fix
 
 # Add both project root and src/ to sys.path for imports to work
 project_root = Path(__file__).parent.parent.parent
@@ -188,7 +188,7 @@ class SQLAnalysisContext(BaseModel):
 
     db_confirmed_fixes: List[dict] = []
     # Past fixes confirmed correct by real users on this specific database.
-    # Retrieved from the per-database store in src/db_skills/.
+    # Retrieved from the per-database store in src/db_confirmed_fixes/.
     # Weight these more heavily than general examples — they reflect real
     # confirmed corrections on this exact schema.
 

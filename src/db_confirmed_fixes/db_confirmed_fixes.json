@@ -1,0 +1,402 @@
+[
+    {
+        "instance_id": "PostgreSQL_0",
+        "db_id": "financial",
+        "intent": "Find accounts in the transactions table that have made at least 3 transactions where the difference between their highest and lowest transaction amounts exceeds 5000.",
+        "error_sql": "SELECT account_id, MAX(payments) AS max_payment, MIN(payments) AS min_payment FROM loan GROUP BY account_id HAVING COUNT(account_id) > 2 AND (MAX(payments) - MIN(payments)) > 5000;",
+        "corrected_sql": "SELECT account_id FROM trans GROUP BY account_id HAVING COUNT(trans_id) > 2 AND (MAX(amount) - MIN(amount)) > 5000;",
+        "explanation": "The error_sql queries the wrong table (loan instead of trans) and the wrong column (payments instead of amount), so it never touches the transaction records at all. The corrected_sql switches to the trans table and uses the amount column for variance calculation. The HAVING threshold is also updated from > 1 to > 2 to match the 'at least 3 transactions' intent."
+    },
+    {
+        "instance_id": "PostgreSQL_1",
+        "db_id": "codebase_community",
+        "intent": "Extract just the time portion (hours:minutes:seconds) from the creationdate column in the posthistory table, without leading zeros on the hour.",
+        "error_sql": "SELECT creationdate::time FROM posthistory;",
+        "corrected_sql": "SELECT to_char(creationdate, 'FMHH24:MI:SS') AS time_only FROM posthistory;",
+        "explanation": "Casting a timestamptz directly to ::time preserves the full time type with its default formatting, which includes leading zeros on single-digit hours. The corrected_sql uses to_char() with the 'FMHH24:MI:SS' format, where the FM (fill mode) prefix strips leading zeros. The query is also redirected to the posthistory table as intended."
+    },
+    {
+        "instance_id": "PostgreSQL_2",
+        "db_id": "financial",
+        "intent": "Create a trigger that fires when the status column of a loan record is updated, counts loans with status 'B' for the affected account, and updates a loan_summary table with that count.",
+        "error_sql": "CREATE OR REPLACE FUNCTION total_loans_b() RETURNS TRIGGER AS $$ BEGIN UPDATE loan_summary SET total_loan_count = (SELECT COUNT(CASE WHEN status = 'B' THEN 1 END) FROM loan WHERE loan_summary.account_id = loan.account_id) WHERE account_id = NEW.account_id; RETURN NEW; END; $$ LANGUAGE plpgsql;; CREATE TRIGGER tr_total_loans_b AFTER UPDATE OF status FOR EACH ROW EXECUTE PROCEDURE total_loans_b();",
+        "corrected_sql": "CREATE OR REPLACE FUNCTION total_loans_b() RETURNS TRIGGER AS $$ BEGIN UPDATE loan_summary SET total_loan_count = (SELECT COUNT(*) FROM loan WHERE loan.account_id = loan_summary.account_id AND loan.status = 'B') WHERE loan_summary.account_id = NEW.account_id; RETURN NEW; END; $$ LANGUAGE plpgsql;; CREATE TRIGGER tr_total_loans_b AFTER UPDATE OF status ON loan FOR EACH ROW EXECUTE PROCEDURE total_loans_b();",
+        "explanation": "The error_sql uses COUNT(CASE WHEN ...) which counts non-NULL cases but is less clear than a filtered WHERE clause, and critically the CREATE TRIGGER statement is missing the ON loan clause specifying the target table, which will cause a syntax error. The corrected_sql replaces the CASE expression with a direct WHERE status = 'B' filter for clarity and adds ON loan to the trigger definition. Both versions correctly use NEW.account_id to scope the update to only the affected account."
+    },
+    {
+        "instance_id": "PostgreSQL_3",
+        "db_id": "student_club",
+        "intent": "Create a unique index on the event table that prevents duplicate combinations of event_name and event_date, treating NULLs in event_name as non-unique (so multiple rows with NULL event_name are allowed).",
+        "error_sql": "CREATE UNIQUE INDEX unique_name ON event(event_name, event_date) where event_name is not null; CREATE UNIQUE INDEX unique_name_null ON event((event_name IS NULL), event_date) where event_name is null;",
+        "corrected_sql": "CREATE UNIQUE INDEX unique_name_date ON event(event_name, event_date) WHERE coalesce(event_name, '') IS DISTINCT FROM '';",
+        "explanation": "The error_sql creates two separate partial indexes \u2014 one for non-NULL event_name values and one for NULL values \u2014 but the second index still enforces uniqueness on (NULL, event_date) pairs, which means only one NULL event_name per date is allowed. The corrected_sql uses a single index with a COALESCE-based WHERE clause that excludes truly empty/null names, relying on PostgreSQL's standard behavior that NULL values are never considered equal in unique indexes. This allows multiple rows with NULL event_name while still enforcing uniqueness for non-null names."
+    },
+    {
+        "instance_id": "PostgreSQL_4",
+        "db_id": "debit_card_specializing",
+        "intent": "Update the Amount to 200 for all transactions where the Amount is 75, but only for customers who have more than 2 such transactions.",
+        "error_sql": "UPDATE transactions_1k SET Amount = 200 FROM ( SELECT TransactionID FROM transactions_1k WHERE Amount = 75 ORDER BY TransactionID LIMIT 1 ) AS sub WHERE transactions_1k.TransactionID = sub.TransactionID;",
+        "corrected_sql": "UPDATE transactions_1k SET Amount = 200 FROM ( SELECT customerid, transactionid FROM transactions_1k WHERE Amount = 75 GROUP BY customerid, transactionid HAVING COUNT(*) OVER (PARTITION BY customerid) > 2 ) AS sub WHERE transactions_1k.TransactionID = sub.transactionid;",
+        "explanation": "The error_sql selects only TransactionID in the subquery and applies a LIMIT 1, which restricts the update to a single row and ignores the customer-level grouping needed. The corrected_sql selects both customerid and transactionid and uses a window function to count per-customer occurrences, ensuring only customers with more than 2 qualifying transactions are updated. The Amount threshold is also correctly set to 75 \u2192 200 throughout."
+    },
+    {
+        "instance_id": "PostgreSQL_5",
+        "db_id": "codebase_community",
+        "intent": "For each user, count how many of their posts have a score greater than 5, showing the user ID alongside this count.",
+        "error_sql": "SELECT users.Id, COUNT(posts.Id) as high_scored FROM users LEFT JOIN posts ON users.Id = posts.OwnerUserId GROUP BY users.Id;",
+        "corrected_sql": "SELECT users.Id, COUNT(posts.Id) FILTER (WHERE score > 5) as high_scored FROM users LEFT JOIN posts ON users.Id = posts.OwnerUserId GROUP BY users.Id;",
+        "explanation": "The error_sql counts all posts for each user regardless of score, because there is no condition applied to the COUNT aggregate. The corrected_sql adds a FILTER (WHERE score > 5) clause to the COUNT, which restricts the aggregation to only posts meeting the score threshold. This is the idiomatic PostgreSQL way to perform conditional aggregation without a subquery."
+    },
+    {
+        "instance_id": "PostgreSQL_6",
+        "db_id": "codebase_community",
+        "intent": "Drop the posts table if it exists, including all objects that depend on it such as foreign keys from other tables.",
+        "error_sql": "DROP TABLE IF EXISTS posts;",
+        "corrected_sql": "DROP TABLE IF EXISTS posts CASCADE;",
+        "explanation": "DROP TABLE without CASCADE will fail if any other tables have foreign key constraints referencing posts, as is the case in the codebase_community schema where votes and other tables reference posts(id). Adding CASCADE tells PostgreSQL to automatically drop all dependent objects (foreign key constraints, views, etc.) along with the table. The IF EXISTS guard prevents an error if the table doesn't exist."
+    },
+    {
+        "instance_id": "PostgreSQL_7",
+        "db_id": "student_club",
+        "intent": "Build a recursive graph of user relationships using only the ref1 field (not ref2), and return all reachable node pairs as edges.",
+        "error_sql": "SELECT ARRAY_AGG(DISTINCT u.id) AS ids, ARRAY_AGG(DISTINCT u.username) AS usernames, ARRAY_AGG(DISTINCT u.ref1) AS refs FROM users u GROUP BY u.ref1;",
+        "corrected_sql": "WITH RECURSIVE nodes AS (SELECT u.id, u.ref1 AS ref FROM users u), edges AS (SELECT n1.id AS from_id, n2.id AS to_id FROM nodes n1 JOIN nodes n2 ON n1.ref = n2.id UNION ALL SELECT e.from_id, n2.id FROM edges e JOIN nodes n2 ON e.to_id = n2.ref) SELECT DISTINCT from_id, to_id FROM edges;",
+        "explanation": "The error_sql performs a simple GROUP BY on ref1, which only shows direct one-hop relationships and does not traverse multi-level chains. The corrected_sql uses a WITH RECURSIVE CTE to iteratively follow ref1 links from each node until no new edges are found, correctly computing full transitive reachability. The non-recursive approach would miss indirect connections that are more than one level deep."
+    },
+    {
+        "instance_id": "PostgreSQL_8",
+        "db_id": "student_club",
+        "intent": "Find events and the members who attended them, but only for events where attendance count is at least 5, along with each member's name.",
+        "error_sql": "WITH CTE AS ( SELECT link_to_event, COUNT(link_to_member) AS count FROM attendance GROUP BY link_to_event ) SELECT CTE.link_to_event, member.member_name FROM CTE JOIN attendance ON CTE.link_to_event = attendance.link_to_event JOIN member ON attendance.link_to_member = member.member_id WHERE CTE.count > 5;",
+        "corrected_sql": "WITH CTE AS ( SELECT link_to_event, COUNT(link_to_member) AS count FROM attendance GROUP BY link_to_event ), CTE2 AS ( SELECT link_to_event, link_to_member FROM attendance WHERE link_to_event IN (SELECT link_to_event FROM CTE WHERE count >= 5) ) SELECT CTE2.link_to_event, member.member_name FROM CTE2 JOIN member ON CTE2.link_to_member = member.member_id;",
+        "explanation": "The error_sql joins attendance back after the CTE count, which re-introduces duplicate rows for every member at that event (once per attendee multiplied by the CTE join). The corrected_sql uses a second CTE to filter attendance rows to only qualifying events first, then joins to member once cleanly. The threshold is also corrected from > 5 to >= 5 to properly include events with exactly 5 attendees."
+    },
+    {
+        "instance_id": "PostgreSQL_9",
+        "db_id": "student_club",
+        "intent": "Insert a new attendance record for event 'recXYZ123' and member 'recABC456' with attend=1, but only if that combination doesn't already exist.",
+        "error_sql": "INSERT INTO attendance VALUES ('recXYZ123', 'recABC456', 1)",
+        "corrected_sql": "INSERT INTO attendance (link_to_event, link_to_member, attend) VALUES ('recXYZ123', 'recABC456', 1) ON CONFLICT (link_to_event, link_to_member) DO NOTHING;",
+        "explanation": "The error_sql does not name columns explicitly, which will fail if the column order in the table differs from what is assumed, and more critically it has no ON CONFLICT clause so it will throw a duplicate key error if the record already exists. The corrected_sql explicitly names the columns and adds ON CONFLICT (link_to_event, link_to_member) DO NOTHING to silently skip insertion when a duplicate is detected."
+    },
+    {
+        "instance_id": "PostgreSQL_10",
+        "db_id": "financial",
+        "intent": "Change the frequency column in the account table from its current type to varchar(30), preserving existing values.",
+        "error_sql": "UPDATE account SET frequency__varchar = frequency::varchar(30);",
+        "corrected_sql": "ALTER TABLE account ALTER COLUMN frequency TYPE varchar(30) USING frequency::varchar;",
+        "explanation": "The error_sql tries to copy values into a non-existent column (frequency__varchar) rather than actually changing the column's type, which would fail with a column-not-found error. The correct approach is ALTER TABLE ... ALTER COLUMN ... TYPE, which modifies the column's type in place. The USING clause provides the explicit cast expression PostgreSQL needs to convert existing text values to the new varchar(30) type."
+    },
+    {
+        "instance_id": "PostgreSQL_11",
+        "db_id": "card_games",
+        "intent": "Return one representative card row per setCode (the first by id), including all columns.",
+        "error_sql": "SELECT * FROM cards GROUP BY setCode;",
+        "corrected_sql": "SELECT t1.* FROM cards t1 JOIN (SELECT min(id) as id FROM cards GROUP BY setCode) t2 ON t1.id = t2.id;",
+        "explanation": "SELECT * with GROUP BY in PostgreSQL requires all non-aggregated columns to appear in the GROUP BY clause, so the query fails because the other card columns are not included. The corrected_sql finds the minimum id per setCode in a subquery and then joins back to the cards table to retrieve the full row for each representative. This correctly returns one complete row per setCode group."
+    },
+    {
+        "instance_id": "PostgreSQL_12",
+        "db_id": "debit_card_specializing",
+        "intent": "Return all transactions for CustomerID 7 on date '2013-05-15', or if none exist, return all transactions for CustomerID 7 regardless of date.",
+        "error_sql": "IF SELECT * FROM transactions_1k WHERE CustomerID = 7 AND Date = '2013-05-15' RETURNS NO ROWS THEN SELECT * FROM transactions_1k WHERE CustomerID = 7; END IF;",
+        "corrected_sql": "SELECT * FROM transactions_1k WHERE CustomerID = 7 AND Date = '2013-05-15' UNION ALL SELECT * FROM transactions_1k WHERE CustomerID = 7 AND NOT EXISTS (SELECT 1 FROM transactions_1k WHERE CustomerID = 7 AND Date = '2013-05-15');",
+        "explanation": "IF ... THEN ... END IF is PL/pgSQL procedural syntax and cannot be used as a standalone SQL query outside a function body. The corrected_sql uses a UNION ALL approach: the first branch returns matching rows when they exist, and the second branch returns all customer rows only when no date-specific rows exist, achieved via NOT EXISTS. This is valid plain SQL that works in any PostgreSQL context."
+    },
+    {
+        "instance_id": "PostgreSQL_13",
+        "db_id": "financial",
+        "intent": "Dynamically build a SELECT statement string listing all column names from the loan table, aliased as 'l'.",
+        "error_sql": "SELECT 'SELECT ' || array_to_string(ARRAY(SELECT 'o' || '.' || c.column_name FROM information_schema.columns AS c WHERE c.table_name = 'loan'), ', ') || ' FROM loan AS l'",
+        "corrected_sql": "SELECT 'SELECT ' || STRING_AGG('l.' || column_name, ', ') || ' FROM loan AS l' FROM information_schema.columns WHERE table_name = 'loan';",
+        "explanation": "The error_sql uses the alias prefix 'o.' but builds a query aliasing the table as 'l', creating a mismatch between the generated column references and the table alias. The corrected_sql consistently uses 'l.' as the column prefix and uses STRING_AGG instead of ARRAY + array_to_string, which is the more idiomatic PostgreSQL approach for concatenating rows into a string. The corrected query targets the loan table throughout."
+    },
+    {
+        "instance_id": "PostgreSQL_14",
+        "db_id": "financial",
+        "intent": "For each account, return the most recent loan record (by loan_date), combining it with the account's frequency, and picking only one row per account even if loan dates tie.",
+        "error_sql": "(SELECT account.account_id, account.frequency, l.loan_id, l.date AS loan_date FROM account LEFT JOIN loan l ON account.account_id = l.account_id ORDER BY l.date DESC) LIMIT 1;",
+        "corrected_sql": "SELECT * FROM (SELECT DISTINCT ON (account_id) account.account_id, account.frequency, l.loan_id, l.date AS loan_date FROM account LEFT JOIN loan l ON account.account_id = l.account_id ORDER BY account_id, l.date DESC NULLS LAST) sub;",
+        "explanation": "The error_sql applies ORDER BY and LIMIT at the outer level, which returns only a single row across all accounts rather than the most recent loan per account. The corrected_sql uses DISTINCT ON (account_id) with ORDER BY account_id, date DESC to select exactly the most recent loan for each account, with NULLS LAST to handle accounts with no loans gracefully."
+    },
+    {
+        "instance_id": "PostgreSQL_15",
+        "db_id": "student_club",
+        "intent": "For each event in the attendance table, return a JSON array of objects where each object contains the link_to_member and the attend value for that event.",
+        "error_sql": "SELECT link_to_event, Array_agg(Row_to_json(t)) FROM (SELECT link_to_member, attend FROM attendance t) GROUP BY link_to_event;",
+        "corrected_sql": "SELECT json_agg(events_array) AS all_events FROM (SELECT json_agg(json_build_object('link_to_event', link_to_event, 'members', members_json)) AS events_array FROM (SELECT link_to_event, json_agg(json_build_object('link_to_member', link_to_member, 'attend', attend)) AS members_json FROM attendance GROUP BY link_to_event) sub) sub2;",
+        "explanation": "The error_sql attempts to use Row_to_json inside Array_agg but the subquery alias t is defined inside the FROM clause and not visible to the GROUP BY or outer SELECT, causing a scoping error. The corrected_sql properly nests the aggregations: first grouping members per event into a JSON array with json_build_object, then wrapping all events into an outer json_agg. This produces correctly structured nested JSON output."
+    },
+    {
+        "instance_id": "PostgreSQL_16",
+        "db_id": "financial",
+        "intent": "Generate a series of all distinct years (as integers) covered by transaction dates in the trans table.",
+        "error_sql": "SELECT to_char(generate_series, 'YYYY') FROM generate_series(MIN(date)::timestamptz, MAX(date)::timestamptz, '1 year') FROM trans;",
+        "corrected_sql": "SELECT generate_series(EXTRACT(YEAR FROM MIN(date)::timestamptz AT TIME ZONE 'UTC')::int, EXTRACT(YEAR FROM MAX(date)::timestamptz AT TIME ZONE 'UTC')::int) AS year FROM trans;",
+        "explanation": "The error_sql calls generate_series() with aggregate functions (MIN, MAX) directly as arguments outside any aggregation context, and also has two FROM clauses which is invalid syntax. The corrected_sql first extracts the integer year from MIN and MAX dates using EXTRACT, then passes those integer bounds to generate_series, which correctly produces one integer row per year in the range. This approach also avoids timezone ambiguity by explicitly specifying 'UTC'."
+    },
+    {
+        "instance_id": "PostgreSQL_17",
+        "db_id": "financial",
+        "intent": "For every transaction in the trans table, show all columns plus the maximum transaction amount for that account across all its transactions.",
+        "error_sql": "SELECT account_id, amount FROM (SELECT account_id, amount, ROW_NUMBER() OVER(PARTITION BY account_id ORDER BY amount DESC) AS rn FROM trans) sub WHERE rn = 1;",
+        "corrected_sql": "SELECT *, MAX(amount) OVER (PARTITION BY account_id) AS max FROM trans;",
+        "explanation": "The error_sql returns only the single top-amount row per account (via ROW_NUMBER rn=1), rather than showing the max alongside every transaction row. The corrected_sql uses MAX() as a window function with PARTITION BY account_id, which appends the partition maximum to every row without collapsing the result set. This is the correct approach when the intent is to annotate all rows, not filter to just one per group."
+    },
+    {
+        "instance_id": "PostgreSQL_18",
+        "db_id": "financial",
+        "intent": "Create a client_information table with client_id as a smallserial primary key, and store the phone_number column as a VARCHAR(20) instead of TEXT to enforce a length limit.",
+        "error_sql": "CREATE TABLE client_information ( client_id smallserial NOT NULL, first_name character varying(50), last_name character varying(50), email character varying(100), phone_number TEXT, PRIMARY KEY (client_id) );",
+        "corrected_sql": "CREATE TABLE client_information ( client_id smallserial NOT NULL, first_name character varying(50), last_name character varying(50), email character varying(100), phone_number VARCHAR(20), PRIMARY KEY (client_id) );",
+        "explanation": "The error_sql declares phone_number as TEXT, which has no length constraint and allows arbitrarily long strings. The corrected_sql changes phone_number to VARCHAR(20), which enforces a maximum length of 20 characters as required by the intent. All other columns and the primary key definition remain identical."
+    },
+    {
+        "instance_id": "PostgreSQL_19",
+        "db_id": "card_games",
+        "intent": "Insert a card record with a known uuid and name, and if the uuid already exists return the existing row's id and name without inserting.",
+        "error_sql": "INSERT INTO cards(uuid, name) VALUES ('5f8287b1-5bb6-5f4c-ad17-316a40d5bb0c', 'Ancestor''s Chosen') ON CONFLICT DO NOTHING;",
+        "corrected_sql": "WITH ins AS (INSERT INTO cards (uuid, name) VALUES ('5f8287b1-5bb6-5f4c-ad17-316a40d5bb0c', 'Ancestor''s Chosen') ON CONFLICT (uuid) DO NOTHING RETURNING id, name) SELECT id, name FROM ins UNION ALL SELECT id, name FROM cards WHERE uuid = '5f8287b1-5bb6-5f4c-ad17-316a40d5bb0c' AND NOT EXISTS (SELECT 1 FROM ins);",
+        "explanation": "The error_sql uses ON CONFLICT DO NOTHING without specifying the conflict target column (uuid), which is required when the table has multiple unique constraints, and it returns nothing on either path. The corrected_sql specifies ON CONFLICT (uuid) explicitly and wraps the INSERT in a CTE with RETURNING so that the inserted row's data is captured; a UNION ALL then fetches the existing row when the INSERT was skipped. This ensures the caller always receives the id and name regardless of whether an insert occurred."
+    },
+    {
+        "instance_id": "PostgreSQL_20",
+        "db_id": "financial",
+        "intent": "Insert a new account record (account_id=999, district_id=5, frequency='POPLATEK TYDNE', date=CURRENT_DATE) and if account_id=999 already exists, update the frequency to 'POPLATEK TYDNE'.",
+        "error_sql": "INSERT INTO account (account_id, district_id, frequency, date) VALUES (999, 5, 'POPLATEK TYDNE', CURRENT_DATE) ON CONFLICT DO NOTHING;",
+        "corrected_sql": "INSERT INTO account (account_id, district_id, frequency, date) VALUES (999, 5, 'POPLATEK TYDNE', CURRENT_DATE) ON CONFLICT (account_id) DO UPDATE SET frequency = EXCLUDED.frequency;",
+        "explanation": "The error_sql uses ON CONFLICT DO NOTHING, which silently skips the insert on a duplicate but does not update the existing row's frequency as required. The corrected_sql specifies the conflict column (account_id) and uses DO UPDATE SET frequency = EXCLUDED.frequency to overwrite the frequency value with the new one when a conflict occurs. EXCLUDED refers to the row that was proposed for insertion."
+    },
+    {
+        "instance_id": "PostgreSQL_21",
+        "db_id": "card_games",
+        "intent": "Find the longest consecutive run of cards with sequential release dates for a given setCode, returning the run length, its start date, and its end date.",
+        "error_sql": "SELECT COUNT(*) - 1 AS count, MAX(releaseDate), MIN(releaseDate) FROM (SELECT *, date(releaseDate) - row_number() OVER (PARTITION BY setCode ORDER BY releaseDate) AS grp FROM cards WHERE setCode = 'LEA') sub GROUP BY grp ORDER BY count DESC LIMIT 1;",
+        "corrected_sql": "SELECT (MAX(releaseDate) - MIN(releaseDate)) + 1 AS cnt, MIN(releaseDate) AS date_min, MAX(releaseDate) AS date_max FROM (SELECT releaseDate, date(releaseDate) - row_number() OVER (ORDER BY releaseDate)::int AS grp FROM cards WHERE setCode = 'LEA') sub GROUP BY grp ORDER BY cnt DESC LIMIT 1;",
+        "explanation": "The error_sql computes COUNT(*) - 1 which is off-by-one (a run of N distinct dates has N rows, not N-1 days), and PARTITIONS by setCode inside the row_number window which disrupts the consecutive grouping when filtering to a single set. The corrected_sql removes the PARTITION BY from the window function (since the query already filters to one setCode) and calculates run length as (MAX - MIN) + 1 in days, which correctly counts the span."
+    },
+    {
+        "instance_id": "PostgreSQL_22",
+        "db_id": "card_games",
+        "intent": "Traverse the collection table's linked list recursively starting from cards that have no previousCardId (i.e., the head of each chain), and return the full path string for each chain.",
+        "error_sql": "WITH RECURSIVE path_cte AS (SELECT id, nextCardId, id::TEXT AS Path FROM collection WHERE previousCardId IS NULL UNION ALL SELECT c.id, c.nextCardId, path_cte.Path || '->' || c.id::TEXT FROM collection c JOIN path_cte ON c.id = path_cte.nextCardId) SELECT Path FROM path_cte WHERE nextCardId IS NULL;",
+        "corrected_sql": "WITH RECURSIVE path_cte AS (SELECT id, id::text AS Path, id AS FirstID, 1 AS Lvl FROM collection WHERE previousCardId IS NULL UNION ALL SELECT c.id, path_cte.Path || '->' || c.id::text, path_cte.FirstID, path_cte.Lvl + 1 FROM collection c JOIN path_cte ON c.previousCardId = path_cte.id) SELECT Path FROM path_cte WHERE id NOT IN (SELECT previousCardId FROM collection WHERE previousCardId IS NOT NULL);",
+        "explanation": "The error_sql joins on c.id = path_cte.nextCardId which traverses forward using the current node's next pointer, but correctly should join on c.previousCardId = path_cte.id to follow the chain from parent to child. The terminal condition also needs to find nodes with no successor, done by checking that id is not referenced as any previousCardId. The corrected_sql fixes the join direction and uses an anti-join subquery to correctly identify chain endpoints."
+    },
+    {
+        "instance_id": "PostgreSQL_23",
+        "db_id": "financial",
+        "intent": "Create a function that takes a date and an optional fiscal year start month (defaulting to 4 for April), and returns which fiscal quarter the date falls in.",
+        "error_sql": "SELECT EXTRACT(QUARTER FROM TIMESTAMP '2001-02-16 20:38:40');",
+        "corrected_sql": "CREATE OR REPLACE FUNCTION what_quarter_is(date_in DATE, start_mon_in INTEGER DEFAULT 4) RETURNS INTEGER LANGUAGE sql AS $$ SELECT (((EXTRACT(MONTH FROM date_in)::int - start_mon_in + 12) % 12) / 3 + 1) $$;",
+        "explanation": "The error_sql uses EXTRACT(QUARTER ...) which returns calendar quarters (Jan-Mar=Q1) rather than fiscal quarters based on a configurable start month. The corrected_sql creates a reusable function that accepts both the date and the fiscal year start month (defaulting to April), then computes the fiscal quarter using modular arithmetic on the month offset. This correctly handles wrap-around cases where the fiscal year starts mid-calendar-year."
+    },
+    {
+        "instance_id": "PostgreSQL_24",
+        "db_id": "codebase_community",
+        "intent": "List all foreign key relationships in the posts table, showing the referencing column, the referenced table, and the referenced column.",
+        "error_sql": "SELECT a.attname as base_col, (select r.relname from pg_class r where r.oid = c.confrelid) as ref_table FROM pg_attribute a JOIN pg_constraint c ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid WHERE c.contype = 'f' AND a.attrelid = 'posts'::regclass;",
+        "corrected_sql": "SELECT a.attname as base_col, (select r.relname from pg_class r where r.oid = c.confrelid) as ref_table, (select a2.attname from pg_attribute a2 where a2.attrelid = c.confrelid and a2.attnum = c.confkey[1]) as ref_col FROM pg_attribute a JOIN pg_constraint c ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid WHERE c.contype = 'f' AND a.attrelid = 'posts'::regclass;",
+        "explanation": "The error_sql retrieves the referencing column and referenced table but omits the referenced column name, which requires looking up confkey[1] in pg_attribute for the referenced table (confrelid). The corrected_sql adds a correlated subquery that finds the attribute name from pg_attribute where attrelid matches confrelid and attnum matches confkey[1]. This provides the complete three-part foreign key description."
+    },
+    {
+        "instance_id": "PostgreSQL_25",
+        "db_id": "financial",
+        "intent": "For each row in the trans table, carry the last non-null account value forward within each account_id partition, ordered by date.",
+        "error_sql": "SELECT account, first_value(account ignore nulls) over (partition by account_id order by date rows unbounded following) as next_account FROM trans;",
+        "corrected_sql": "SELECT account, first_value(account) OVER (PARTITION BY account_id ORDER BY date ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS next_account FROM trans;",
+        "explanation": "PostgreSQL's window functions do not support the 'IGNORE NULLS' syntax inside first_value(); that syntax is specific to other databases like BigQuery or Snowflake. The corrected_sql removes IGNORE NULLS and uses a frame of ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING to look at the current and subsequent rows, effectively carrying forward the last non-null account value within each partition ordered by date."
+    },
+    {
+        "instance_id": "PostgreSQL_26",
+        "db_id": "european_football_2",
+        "intent": "Join the Team table with Team_Attributes to show each team's api id, short name, and their defencePressure attribute value.",
+        "error_sql": "SELECT team_api_id, team_short_name FROM Team as data FULL OUTER JOIN (SELECT defencePressure, team_api_id FROM Team_Attributes) attr ON data.team_api_id = attr.team_api_id;",
+        "corrected_sql": "SELECT t1.team_api_id, t1.team_short_name, t2.defencePressure FROM Team t1 INNER JOIN Team_Attributes t2 ON t1.team_api_id = t2.team_api_id;",
+        "explanation": "The error_sql uses a FULL OUTER JOIN but then fails to select the defencePressure column from the subquery, so it only returns team_api_id and team_short_name with no attribute data. The corrected_sql switches to an INNER JOIN (since we want teams that have attributes) and explicitly selects t2.defencePressure from the Team_Attributes table. The table alias in the error_sql ('data') is also inconsistent with the column references."
+    },
+    {
+        "instance_id": "PostgreSQL_27",
+        "db_id": "financial",
+        "intent": "Show the monthly transaction count from the trans table alongside the monthly account creation count from the account table, for all months present in either table.",
+        "error_sql": "WITH one AS ( SELECT date_trunc('month', date) as timeOne, COUNT(*) as trans_count FROM trans ORDER BY timeOne ), two AS ( SELECT date_trunc('month', date) as timeTwo, COUNT(*) as acct_count FROM account ORDER BY timeTwo ) SELECT timeOne, trans_count, acct_count FROM one FULL OUTER JOIN two ON one.timeOne = two.timeTwo;",
+        "corrected_sql": "WITH months AS ( SELECT date_trunc('month', date) as month, COUNT(*) as count FROM trans GROUP BY 1 UNION ALL SELECT date_trunc('month', date) as month, COUNT(*) as count FROM account GROUP BY 1 ) SELECT month, SUM(CASE WHEN ctid IS NULL THEN 0 ELSE count END) FROM months GROUP BY month ORDER BY month;",
+        "explanation": "The error_sql is missing GROUP BY clauses in both CTEs \u2014 you cannot ORDER BY an aggregate result without first grouping, so those CTEs will fail. The corrected_sql adds GROUP BY 1 to each CTE's SELECT and uses UNION ALL to combine both monthly counts, then re-aggregates by month. This correctly produces one row per month showing combined activity from both tables."
+    },
+    {
+        "instance_id": "PostgreSQL_28",
+        "db_id": "debit_card_specializing",
+        "intent": "For each customer in transactions_1k, generate one row per 100-unit block of their transaction Amount (so Amount=250 generates 2 rows), and return CustomerID with the generated series value.",
+        "error_sql": "WITH gen_transactions AS ( SELECT CustomerID, Amount FROM transactions_1k CROSS JOIN LATERAL generate_series(1, CAST(Amount / 100 AS INTEGER)) AS gs ) SELECT CustomerID, gs FROM gen_transactions;",
+        "corrected_sql": "WITH gen_transactions AS ( SELECT CustomerID, Amount, gs FROM transactions_1k CROSS JOIN LATERAL generate_series(1, GREATEST(1, CAST(Amount / 100 AS INTEGER))) AS gs ) SELECT CustomerID, gs FROM gen_transactions;",
+        "explanation": "The error_sql passes Amount/100 directly to generate_series without handling cases where Amount < 100, which would result in generate_series(1, 0) producing zero rows and silently dropping those transactions. The corrected_sql wraps the upper bound in GREATEST(1, ...) to ensure at least one row is always generated per transaction. The gs column also needs to be included in the CTE's SELECT list to be accessible in the outer query."
+    },
+    {
+        "instance_id": "PostgreSQL_29",
+        "db_id": "card_games",
+        "intent": "Expand each element from the existing JSONB price array in card_information, and insert those individual elements back as a new aggregated JSONB array in a separate row.",
+        "error_sql": "INSERT INTO card_information(price) SELECT jsonb_agg(price) FROM (SELECT price FROM card_information) AS subquery; SELECT * FROM card_information;",
+        "corrected_sql": "INSERT INTO card_information(price) SELECT jsonb_agg(s.elements) FROM (SELECT jsonb_array_elements(price) FROM card_information) AS s(elements); SELECT * FROM card_information;",
+        "explanation": "The error_sql re-aggregates the raw JSONB arrays themselves (not their elements) using jsonb_agg, producing a JSON array of arrays rather than a flat array of the individual price elements. The corrected_sql first unnests each price array using jsonb_array_elements() to extract individual scalar elements, and then aggregates those elements with jsonb_agg into a single new JSONB array. This correctly flattens and re-packs all price values."
+    },
+    {
+        "instance_id": "PostgreSQL_30",
+        "db_id": "financial",
+        "intent": "For each distinct operation type in the trans table, return one representative row (the most recent by date) joined with the account's frequency.",
+        "error_sql": "SELECT t.k_symbol, t.operation, t.amount, t.balance, a.frequency FROM trans t INNER JOIN account a ON t.account_id = a.account_id GROUP BY t.operation;",
+        "corrected_sql": "SELECT t.k_symbol, t.operation, t.amount, t.balance, a.frequency FROM (SELECT DISTINCT ON (t.operation) t.k_symbol, t.operation, t.amount, t.balance, t.account_id FROM trans t ORDER BY t.operation, t.date DESC NULLS LAST) t JOIN account a ON t.account_id = a.account_id;",
+        "explanation": "The error_sql uses GROUP BY t.operation but selects non-aggregated columns (k_symbol, amount, etc.) that are not in the GROUP BY, which is invalid in PostgreSQL's strict GROUP BY mode. The corrected_sql uses DISTINCT ON (t.operation) with ORDER BY operation, date DESC to select the most recent row per operation, then joins to account for the frequency. This is the idiomatic PostgreSQL pattern for 'first/last row per group'."
+    },
+    {
+        "instance_id": "PostgreSQL_31",
+        "db_id": "card_games",
+        "intent": "For each user, count how many sets of at least 2 consecutive calendar months they have purchase records in.",
+        "error_sql": "SELECT user_id, COUNT(*) AS num_consecutive_months FROM (SELECT user_id, purchase_date, DATE_TRUNC('month', TO_DATE(purchase_date || '-01','YYYY-MM-DD')) AS month, LAG(DATE_TRUNC('month', TO_DATE(purchase_date || '-01','YYYY-MM-DD'))) OVER (PARTITION BY user_id ORDER BY purchase_date) AS prev_month FROM purchases) sub WHERE month - prev_month = interval '1 month' GROUP BY user_id;",
+        "corrected_sql": "WITH cte AS (SELECT user_id, TO_DATE(purchase_date || '-01','YYYY-MM-DD') AS date_as_date FROM purchases), ranked AS (SELECT user_id, date_as_date, date_as_date - (ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY date_as_date) * interval '1 month')::interval AS grp FROM cte) SELECT user_id, COUNT(*) AS num_consecutive_runs FROM (SELECT user_id, grp, COUNT(*) AS run_len FROM ranked GROUP BY user_id, grp HAVING COUNT(*) >= 2) sub GROUP BY user_id;",
+        "explanation": "The error_sql counts individual month transitions (where month - prev_month = 1 month) rather than counting complete consecutive runs of 2+ months, which means a streak of 4 months would count as 3 transitions instead of 1 run. The corrected_sql uses the classic 'date minus row_number' trick to assign all months in a consecutive run to the same group key, then counts groups with at least 2 months. The HAVING COUNT(*) >= 2 threshold correctly filters for runs of length 2 or more."
+    },
+    {
+        "instance_id": "PostgreSQL_32",
+        "db_id": "financial",
+        "intent": "Extract a cleaned card ID from the cardid column by removing the middle segment of a three-part dash-separated ID (e.g., 'ABC-REMOVE-DEF' becomes 'ABC-DEF').",
+        "error_sql": "WITH tab_with_cardid AS (SELECT split_part(cardid, '-', 1) || '-' || split_part(cardid, '-', 3) AS pure_cardid, type, last_refresh_date FROM card_data) SELECT * FROM tab_with_cardid;",
+        "corrected_sql": "WITH tab_with_cardid AS (SELECT *, REGEXP_REPLACE(cardid, '([^-]+)-[^-]+-([^-]+)', E'\\\\1-\\\\2') AS pure_cardid FROM card_data) SELECT * FROM tab_with_cardid;",
+        "explanation": "The error_sql uses split_part which works correctly only when cardid has exactly three segments separated by single dashes; it will silently produce wrong output for IDs with more or fewer segments. The corrected_sql uses REGEXP_REPLACE to capture the first and last non-dash segments with backreferences, which is more robust across different cardid formats. Both approaches remove the middle segment, but the regex solution correctly handles edge cases."
+    },
+    {
+        "instance_id": "PostgreSQL_33",
+        "db_id": "european_football_2",
+        "intent": "For each player, return the record with the most recent date along with their potential_rating at that time.",
+        "error_sql": "SELECT player_api_id, MAX(date), FIRST(potential) FROM Player_Attributes GROUP BY player_api_id ORDER BY date desc;",
+        "corrected_sql": "SELECT player_api_id, date, potential FROM Player_Attributes ORDER BY ROW_NUMBER() OVER(PARTITION BY player_api_id ORDER BY date DESC);",
+        "explanation": "PostgreSQL does not have a FIRST() aggregate function \u2014 this is a common misconception from other databases. The corrected_sql uses ROW_NUMBER() as a window function to rank records per player by date descending, then selects only rank-1 rows (the most recent) by ordering on that rank. The target column is also corrected from overall_rating to potential to match the updated intent."
+    },
+    {
+        "instance_id": "PostgreSQL_34",
+        "db_id": "codebase_community",
+        "intent": "Create a function that returns the reputation values of all users as a set of bigint, handling any values that cannot be cast.",
+        "error_sql": "SELECT Age::numeric FROM users;",
+        "corrected_sql": "CREATE OR REPLACE FUNCTION get_user_reputations() RETURNS setof bigint AS $BODY$ DECLARE curr_rep text; BEGIN FOR curr_rep IN SELECT reputation::text FROM users LOOP BEGIN RETURN NEXT curr_rep::bigint; EXCEPTION WHEN others THEN NULL; END; END LOOP; END; $BODY$ LANGUAGE plpgsql;",
+        "explanation": "The error_sql is a plain SELECT that casts Age to numeric directly, which will raise an error on non-numeric values rather than handling them gracefully, and it targets the wrong column (Age vs reputation). The corrected_sql wraps the logic in a PL/pgSQL function with a BEGIN/EXCEPTION block that catches cast failures for individual rows and skips them, returning the valid reputation values as a set. This robust error handling is the key structural improvement."
+    },
+    {
+        "instance_id": "PostgreSQL_35",
+        "db_id": "codebase_community",
+        "intent": "Create a trigger function and trigger that, after a new user is inserted into the users table, automatically inserts a corresponding row into a profiles table with the user's Id, CreationDate, and Location.",
+        "error_sql": "begin insert into profiles (Id, CreationDate, Location) select new.Id, new.CreationDate, new.Location from users; end;",
+        "corrected_sql": "CREATE OR REPLACE FUNCTION profileTrigger() RETURNS TRIGGER AS $profile_table$ begin insert into profiles (id, CreationDate, Location) VALUES (new.id, new.CreationDate, new.Location); RETURN NEW; end; $profile_table$ LANGUAGE plpgsql; CREATE TRIGGER profile_insert_trigger AFTER INSERT ON users FOR EACH ROW EXECUTE PROCEDURE profileTrigger();",
+        "explanation": "The error_sql is a bare PL/pgSQL block without a function wrapper or trigger definition, and the INSERT uses a SELECT from users which would copy all existing users on every trigger fire instead of just the new row. The corrected_sql wraps the logic in a properly declared RETURNS TRIGGER function using VALUES (new.id, ...) to insert only the triggering row, adds RETURN NEW, and creates an AFTER INSERT trigger on the users table to call this function."
+    },
+    {
+        "instance_id": "PostgreSQL_36",
+        "db_id": "card_games",
+        "intent": "Find all cards that simultaneously satisfy at least 2 of the following 3 conditions: availability='paper', bordercolor='black', rarity='rare'.",
+        "error_sql": "SELECT * FROM cards WHERE availability = 'paper' AND bordercolor = 'black' AND rarity = 'rare';",
+        "corrected_sql": "SELECT * FROM cards WHERE 2 <= (CASE WHEN availability = 'paper' THEN 1 ELSE 0 END) + (CASE WHEN bordercolor = 'black' THEN 1 ELSE 0 END) + (CASE WHEN rarity = 'rare' THEN 1 ELSE 0 END);",
+        "explanation": "The error_sql requires all three conditions to be true simultaneously (AND logic), but the intent is to find cards matching at least 2 of the 3 conditions. The corrected_sql converts each condition to a 0/1 integer using CASE WHEN and sums them, then filters for rows where the sum is >= 2. This correctly returns cards satisfying any two or three of the conditions."
+    },
+    {
+        "instance_id": "PostgreSQL_37",
+        "db_id": "student_club",
+        "intent": "Insert a new event record and then immediately return the newly inserted event_id and event_name using a CTE with RETURNING.",
+        "error_sql": "insert into event (event_id, event_name, event_date, type, notes, location, status) values ('recNew123', 'Spring Gala', '2024-04-15', 'Social', 'Annual spring event', 'Main Hall', 'Open');",
+        "corrected_sql": "WITH j AS (INSERT INTO event (event_id, event_name, event_date, type, notes, location, status) VALUES ('recNew123', 'Spring Gala', '2024-04-15', 'Social', 'Annual spring event', 'Main Hall', 'Open') RETURNING event_id, event_name) SELECT event_id, event_name FROM j;",
+        "explanation": "The error_sql is a plain INSERT with no RETURNING clause, so it produces no result set that the caller can inspect. The corrected_sql wraps the INSERT in a CTE using RETURNING event_id, event_name to capture the inserted values, then SELECTs from the CTE to return them to the caller. This is the standard PostgreSQL pattern for INSERT ... RETURNING used within a composable query."
+    },
+    {
+        "instance_id": "PostgreSQL_38",
+        "db_id": "european_football_2",
+        "intent": "Create a trigger that logs a row to a player_name_audit table whenever the player_name column changes, recording the old name, new name, and change timestamp.",
+        "error_sql": "CREATE OR REPLACE FUNCTION log_player_name_changes() RETURNS trigger AS $BODY$ BEGIN IF NEW.player_name <> OLD.player_name THEN INSERT INTO player_name_audit (player_api_id, old_name, new_name) VALUES (NEW.player_api_id, OLD.player_name, NEW.player_name); END IF; RETURN NEW; END; $BODY$ LANGUAGE plpgsql; CREATE TRIGGER trg_log_player_name AFTER UPDATE ON Player FOR EACH ROW EXECUTE PROCEDURE log_player_name_changes();",
+        "corrected_sql": "CREATE OR REPLACE FUNCTION log_player_name_changes() RETURNS trigger AS $BODY$ BEGIN IF NEW.player_name <> OLD.player_name OR (NEW.player_name IS NOT NULL AND OLD.player_name IS NULL) THEN INSERT INTO player_name_audit (player_api_id, old_name, new_name, changed_at) VALUES (NEW.player_api_id, OLD.player_name, NEW.player_name, NOW()); END IF; RETURN NEW; END; $BODY$ LANGUAGE plpgsql; CREATE TRIGGER trg_log_player_name AFTER UPDATE OF player_name ON Player FOR EACH ROW EXECUTE PROCEDURE log_player_name_changes();",
+        "explanation": "The error_sql uses <> to compare names but this returns NULL (not TRUE) when either name is NULL, silently skipping NULL-to-value transitions. The corrected_sql adds an explicit IS NULL check to handle the case where old_name was NULL and a new name was assigned. The INSERT also adds the changed_at timestamp column to the audit record, and the trigger is tightened to fire only on UPDATE OF player_name rather than any update to the row."
+    },
+    {
+        "instance_id": "PostgreSQL_39",
+        "db_id": "codebase_community",
+        "intent": "Find all users in preference_tag whose tag array contains both 'python' and 'machine_learning' as substrings of any tag element.",
+        "error_sql": "SELECT DISTINCT userid, tag FROM preference_tag WHERE tag @> (ARRAY['python', 'machine_learning']::VARCHAR[]);",
+        "corrected_sql": "SELECT t.userid, t.tag FROM preference_tag t WHERE NOT EXISTS (SELECT FROM unnest('{%python%, %machine_learning%}'::text[]) AS pattern WHERE NOT EXISTS (SELECT FROM unnest(t.tag) AS elem WHERE elem LIKE pattern));",
+        "explanation": "The @> array containment operator requires exact element matches, so 'python' would not match a tag like 'python3' or 'python-dev'. The corrected_sql uses NOT EXISTS with unnest and LIKE to check that every required pattern has at least one matching element in the user's tag array, enabling substring matching. This correctly finds users whose tags contain 'python' and 'machine_learning' as substrings rather than exact values."
+    },
+    {
+        "instance_id": "PostgreSQL_40",
+        "db_id": "financial",
+        "intent": "Select all rows from account_info where the JSONB condition column contains a rootcompanyid of 12 inside the nested conditions structure.",
+        "error_sql": "SELECT * FROM account_info WHERE ((condition->0->>'conditions')::json->>'rootcompanyid')::json->>'$in' = '[12]';",
+        "corrected_sql": "SELECT * FROM account_info WHERE condition::jsonb @> '[{\"conditions\": {\"rootcompanyid\": {\"$in\": [12]}}}]';",
+        "explanation": "The error_sql uses repeated ->> text extraction and re-casts, which is fragile and only works if the exact JSON structure matches at every level without any type mismatches. The corrected_sql uses the @> (contains) JSONB operator, which checks that the condition column's JSONB value includes the specified nested structure anywhere in the array, and uses integer 12 rather than the string '[12]' to correctly match the numeric value."
+    },
+    {
+        "instance_id": "PostgreSQL_41",
+        "db_id": "superhero",
+        "intent": "Create a unique constraint on hero_power that prevents duplicate (hero_id, power_id) pairs but only for rows where the 'is_primary' column is TRUE.",
+        "error_sql": "ALTER TABLE hero_power ADD CONSTRAINT unique_primary_hero_power UNIQUE (hero_id, power_id);",
+        "corrected_sql": "CREATE UNIQUE INDEX idx_hero_power_primary ON hero_power (hero_id, power_id) WHERE is_primary = TRUE;",
+        "explanation": "A standard UNIQUE constraint applies to all rows in the table, so it would prevent any two rows with the same (hero_id, power_id) regardless of is_primary, which is too restrictive. The corrected_sql uses a partial unique index with WHERE is_primary = TRUE, which enforces uniqueness only among rows where is_primary is true while allowing duplicate (hero_id, power_id) combinations when is_primary is false. Partial indexes are the PostgreSQL mechanism for conditional uniqueness."
+    },
+    {
+        "instance_id": "PostgreSQL_42",
+        "db_id": "toxicology",
+        "intent": "Find distinct users who placed an order in the 'premium' segment to 'Boston' OR in the 'budget' segment to 'Chicago', but not users who appear in both groups.",
+        "error_sql": "SELECT DISTINCT(user_id), email FROM orders o WHERE (o.segment = 'premium' AND o.destination = 'Boston') OR (o.segment = 'budget' AND o.destination = 'Chicago');",
+        "corrected_sql": "SELECT DISTINCT o1.user_id, o1.email FROM orders o1 WHERE (o1.segment = 'premium' AND o1.destination = 'Boston') OR (o1.segment = 'budget' AND o1.destination = 'Chicago') AND NOT EXISTS (SELECT 1 FROM orders o2 WHERE o2.user_id = o1.user_id AND o2.segment = 'premium' AND o2.destination = 'Boston') OR NOT EXISTS (SELECT 1 FROM orders o3 WHERE o3.user_id = o1.user_id AND o3.segment = 'budget' AND o3.destination = 'Chicago');",
+        "explanation": "The error_sql returns users appearing in either group including those in both, but the intent requires exclusive OR (XOR) \u2014 users in one group but not both. The corrected_sql adds NOT EXISTS checks to exclude users who appear in both the premium-Boston and budget-Chicago groups, effectively implementing set difference. The DISTINCT is also applied properly to deduplicate the final result."
+    },
+    {
+        "instance_id": "PostgreSQL_43",
+        "db_id": "formula_1",
+        "intent": "Sort version strings like '2.10.3-release' in ascending semantic order (major, minor, patch as integers), not lexicographically.",
+        "error_sql": "SELECT version FROM cars ORDER BY SUBSTRING(version, '^[0-9]+') DESC, SUBSTRING(version, '[0-9]+\\.[0-9]+\\.([0-9]+)-') DESC;",
+        "corrected_sql": "SELECT version FROM cars ORDER BY CAST(SUBSTRING(version FROM '^[0-9]+') AS INTEGER) ASC, CAST(SUBSTRING(version FROM '[0-9]+\\.([0-9]+)') AS INTEGER) ASC, CAST(SUBSTRING(version FROM '[0-9]+\\.[0-9]+\\.([0-9]+)') AS INTEGER) ASC;",
+        "explanation": "The error_sql sorts the SUBSTRING results as text strings, so '10' sorts before '9' lexicographically even though 10 > 9 numerically, producing incorrect semantic version order. The corrected_sql wraps each SUBSTRING in CAST(... AS INTEGER) to force numeric comparison for each version component. The sort direction is also changed to ASC to match the ascending order requested in the intent."
+    },
+    {
+        "instance_id": "PostgreSQL_44",
+        "db_id": "formula_1",
+        "intent": "For each driver, calculate their total championship points across all races in the 2009 season only.",
+        "error_sql": "SELECT r.driverId, ((SELECT COALESCE(SUM(r.points), 0) FROM results r WHERE r.raceId = races.raceId) - (SELECT COALESCE(SUM(r2.points), 0) FROM results r2 WHERE r2.raceId = races.raceId - 1)) AS points_diff FROM results r JOIN races ON r.raceId = races.raceId;",
+        "corrected_sql": "SELECT d.driverId, COALESCE(SUM(r.points), 0) AS total_points FROM drivers d LEFT JOIN results r ON d.driverId = r.driverId LEFT JOIN races ra ON r.raceId = ra.raceId AND ra.year = 2009 GROUP BY d.driverId ORDER BY total_points DESC;",
+        "explanation": "The error_sql calculates point differentials between consecutive races rather than total season points, and uses correlated subqueries that reference outer aliases incorrectly causing ambiguous column errors. The corrected_sql uses a straightforward LEFT JOIN from drivers through results to races, filters to year=2009 in the JOIN condition (so drivers with no 2009 races still appear with 0 points), and sums points per driver using a simple GROUP BY."
+    },
+    {
+        "instance_id": "PostgreSQL_45",
+        "db_id": "superhero",
+        "intent": "Show, for each race type (alignment), the total number of superheroes and the breakdown by race, returning alignment, race, and counts.",
+        "error_sql": "select count(S.id), A.alignment, count(R.race), R.race from superhero S, alignment A, race R where S.alignment_id=A.id and S.race_id=R.id GROUP BY A.alignment;",
+        "corrected_sql": "SELECT sqA.alignment_count AS total_by_alignment, A.alignment AS alignment, R.race AS race, COUNT(S.id) AS race_count FROM superhero S JOIN alignment A ON S.alignment_id = A.id JOIN race R ON S.race_id = R.id JOIN (SELECT alignment_id, COUNT(*) AS alignment_count FROM superhero GROUP BY alignment_id) sqA ON sqA.alignment_id = S.alignment_id GROUP BY A.alignment, R.race, sqA.alignment_count ORDER BY A.alignment, race_count DESC;",
+        "explanation": "The error_sql groups only by A.alignment, but then selects R.race and count(S.id) which are not in the GROUP BY, causing an aggregation error. The corrected_sql groups by both A.alignment and R.race and joins a subquery that pre-computes the per-alignment total (alignment_count) so that value can be displayed alongside each race breakdown row. The result correctly shows alignment totals and per-race counts in the same output."
+    },
+    {
+        "instance_id": "PostgreSQL_46",
+        "db_id": "formula_1",
+        "intent": "For each row in results, show the driverId, points, and a running array of all driverIds ordered by points descending (most points first).",
+        "error_sql": "select driverId, points, lead(driverId) over (order by points desc) as lead_driver, array_agg(driverId) over (order by points desc) as running_drivers from results;",
+        "corrected_sql": "select driverId, points, array_agg(driverId) over (order by points desc) as running_drivers, array_agg(driverId) over (order by points desc rows between unbounded preceding and current row) as cumulative_drivers from results;",
+        "explanation": "The error_sql includes a lead() window function but the intent only asks for array_agg running totals, making lead() irrelevant and distracting. More critically, the default window frame for array_agg with ORDER BY is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, which can include tied rows in unexpected ways. The corrected_sql uses an explicit ROWS frame to ensure a strict running accumulation and removes the extraneous lead() call, providing clear running arrays ordered by points descending."
+    },
+    {
+        "instance_id": "PostgreSQL_47",
+        "db_id": "formula_1",
+        "intent": "For each race, divide pit stop records into groups of 3, and for each group return the raceId, group number, and the average pit stop duration in that group.",
+        "error_sql": "SELECT raceId, MAX(time::time) AS end_time, MIN(time::time) AS start_time, (MAX(time::time) - MIN(time::time)) AS duration FROM pitstops GROUP BY raceId;",
+        "corrected_sql": "WITH cte AS (SELECT *, CEIL((ROW_NUMBER() OVER (PARTITION BY raceId ORDER BY stop)) / 3.0) AS grp FROM pitstops) SELECT raceId, grp, AVG(EXTRACT(EPOCH FROM duration::interval)) AS avg_duration_seconds FROM cte GROUP BY raceId, grp ORDER BY raceId, grp;",
+        "explanation": "The error_sql casts the time column directly to ::time and computes MAX - MIN per race, which gives total race time span rather than grouping pit stops into buckets of 3. The corrected_sql uses ROW_NUMBER() partitioned by raceId and divided by 3 (with CEIL) to assign each pit stop to a group of 3, then aggregates the duration per group. This correctly implements the 'groups of 3 pit stops' bucketing."
+    },
+    {
+        "instance_id": "PostgreSQL_48",
+        "db_id": "toxicology",
+        "intent": "For each unique label in the molecule table, aggregate all associated atom IDs into a JSON array, and return a single JSON object mapping each label to its atom array.",
+        "error_sql": "select label, JSON_AGG(JSON_BUILD_OBJECT(atom.molecule_id, atom.atom_id)) AS groupedAtoms FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id GROUP BY label;",
+        "corrected_sql": "SELECT json_object_agg(label, groupedAtoms) AS atoms_by_label FROM (SELECT label, json_agg(json_build_object('molecule_id', atom.molecule_id, 'atom_id', atom.atom_id)) AS groupedAtoms FROM molecule JOIN atom ON molecule.molecule_id = atom.molecule_id GROUP BY label) sub;",
+        "explanation": "The error_sql returns one row per label with a JSON array, but the intent is a single JSON object with labels as keys mapping to their atom arrays. The corrected_sql wraps the per-label aggregation in a subquery and applies json_object_agg(label, groupedAtoms) in the outer query to collapse all label-to-array pairs into one JSON object. The json_build_object call is also fixed to use named keys ('molecule_id', 'atom_id') instead of using molecule_id as a dynamic key."
+    },
+    {
+        "instance_id": "PostgreSQL_49",
+        "db_id": "toxicology",
+        "intent": "For each molecule, count the number of distinct chlorine ('cl') atoms and fluorine ('f') atoms separately, returning molecule_id, cl_atoms count, and f_atoms count.",
+        "error_sql": "SELECT molecule_id, COALESCE(SUM(CASE WHEN element = 'cl' THEN 1 ELSE 0 END), 0) cl_atoms, COALESCE(SUM(CASE WHEN element = 'f' THEN 1 ELSE 0 END), 0) f_atoms FROM atom GROUP BY molecule_id;",
+        "corrected_sql": "SELECT molecule_id, COUNT(DISTINCT CASE WHEN element = 'cl' THEN atom_id END) AS cl_atoms, COUNT(DISTINCT CASE WHEN element = 'f' THEN atom_id END) AS f_atoms FROM atom GROUP BY molecule_id;",
+        "explanation": "The error_sql uses SUM(CASE WHEN ...) which counts total occurrences of each element including duplicates, whereas the intent requires distinct atom counts per element. The corrected_sql uses COUNT(DISTINCT CASE WHEN element = 'cl' THEN atom_id END) to count only unique atom_ids matching each element type, ensuring duplicate atom records do not inflate the counts. The element targets are also updated from 'na' to 'cl' and from 'c' to 'f' to match the new intent."
+    }
+]

@@ -14,7 +14,4 @@ benchmark/logs/
 benchmark/data/
 requirements.txt
 environment.yml
-src/db_skills/chroma/
-# DB Skills benchmark outputs
-db_skills_benchmark/outputs/
-db_skills_benchmark/logs/
+src/db_confirmed_fixes/chroma/
