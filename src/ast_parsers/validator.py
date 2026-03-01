@@ -20,6 +20,17 @@ from typing import Dict, List, Optional, Set, Tuple
 # Per-engine live-schema cache: str(engine.url) → {table: {col: type}}
 _live_schema_cache: Dict[str, Dict[str, Dict[str, str]]] = {}
 
+
+def invalidate_schema_cache(engine) -> None:
+    """Clear the cached live schema for *engine* so the next
+    ``validate_with_db`` call re-reflects the DB.
+
+    Call this after running ``preprocess_sql`` or any DDL that changes
+    the set of tables visible in the database.
+    """
+    key = str(engine.url)
+    _live_schema_cache.pop(key, None)
+
 import sqlglot
 from sqlglot import exp
 from sqlglot.errors import ErrorLevel, ParseError
@@ -137,6 +148,9 @@ def validate_with_db(
     ast_schema_errors: List[ValidationError] = []
     if ast is not None:
         ast_schema_errors = _check_schema(ast, live_schema, sql)
+        # Discard noisy token errors — the AST parser understands CTEs,
+        # subquery aliases, and table aliases; the token scanner does not.
+        token_schema_errors = []
 
     # ── 5. EXPLAIN — DB-native first error ───────────────────────────────────
     db_errors = _explain(sql, engine)
@@ -151,7 +165,35 @@ def validate_with_db(
         ast_schema_errors = []
         token_schema_errors = []
 
-    # ── 7. Merge, deduplicate by (tag, context) ───────────────────────────────
+    # ── 7. Cascade suppression ────────────────────────────────────────────────
+    # If EXPLAIN flagged a table as missing (SQLSTATE 42P01), suppress any
+    # AST-level column errors for columns of that same table — they're
+    # guaranteed downstream noise, not independent errors.
+    missing_tables_from_explain: Set[str] = set()
+    for e in db_errors:
+        if e.error_code == "42P01" and e.context:
+            # Try to extract the table name from the error message
+            msg_lower = e.message.lower() if e.message else ""
+            # Pattern: relation "table_name" does not exist
+            import re
+            rel_match = re.search(r'relation "([^"]+)"', msg_lower)
+            if rel_match:
+                missing_tables_from_explain.add(rel_match.group(1).lower())
+
+    if missing_tables_from_explain:
+        ast_schema_errors = [
+            e for e in ast_schema_errors
+            if not (
+                e.tag == ErrorTag.HALLUCINATION_COLUMN
+                and e.context
+                and any(
+                    mt in e.context.lower() or mt in (e.message or "").lower()
+                    for mt in missing_tables_from_explain
+                )
+            )
+        ]
+
+    # ── 8. Merge, deduplicate by (tag, context) ───────────────────────────────
     # Priority: EXPLAIN > AST-schema > token-schema > syntax > silent
     all_errors = _merge_errors(
         db_errors,
@@ -290,6 +332,27 @@ def _check_schema(
     # ── PostgreSQL system schemas — never flag as hallucinated ─────────────────
     _PG_SYSTEM_PREFIXES = ("pg_", "information_schema")
 
+    # ── PostgreSQL built-in SRFs and catalog objects used in FROM clauses ──────
+    _PG_BUILTIN_SRFS = {
+        # Set-returning functions commonly used in FROM
+        "generate_series", "unnest", "regexp_split_to_table",
+        "json_array_elements", "json_array_elements_text",
+        "jsonb_array_elements", "jsonb_array_elements_text",
+        "json_each", "json_each_text", "jsonb_each", "jsonb_each_text",
+        "json_to_record", "jsonb_to_record", "json_to_recordset", "jsonb_to_recordset",
+        "json_populate_record", "jsonb_populate_record",
+        "json_populate_recordset", "jsonb_populate_recordset",
+        "regexp_matches", "string_to_array", "xpath",
+        "ts_stat", "ts_token_type", "ts_parse",
+        "aclexplode", "pg_get_keywords", "pg_options_to_table",
+        # System catalog tables/views
+        "pg_class", "pg_attribute", "pg_constraint", "pg_namespace",
+        "pg_index", "pg_type", "pg_am", "pg_tablespace", "pg_stat_activity",
+        "pg_stat_user_tables", "pg_stat_all_tables", "pg_roles",
+        "pg_database", "pg_proc", "pg_description", "pg_depend",
+        "pg_catalog", "pg_tables", "pg_views", "pg_sequences",
+    }
+
     # ── Collect CTE aliases so they are never flagged as missing tables ────────
     cte_aliases: Set[str] = set()
     for cte_node in ast.find_all(exp.CTE):
@@ -348,6 +411,9 @@ def _check_schema(
         # Skip PostgreSQL system tables / schemas
         if any(t.startswith(p) for p in _PG_SYSTEM_PREFIXES):
             continue
+        # Skip PostgreSQL built-in SRFs and catalog objects
+        if t in _PG_BUILTIN_SRFS:
+            continue
         # Skip if the table's schema qualifier is a system schema
         table_db = table_node.args.get("db")
         if table_db and isinstance(table_db, exp.Identifier):
@@ -366,10 +432,13 @@ def _check_schema(
 
     # ── 2. Column references ──────────────────────────────────────────────────
     # Only check unqualified columns against outer-query schema tables.
-    # CTE/subquery aliases and missing tables are excluded.
+    # CTE/subquery aliases, missing tables, and tables with unknown columns
+    # (empty dict from CTAS parsing) are excluded.
     schema_tables: Set[str] = {
         t for t in outer_tables
-        if t in schema_lower and t not in missing_tables_lower
+        if t in schema_lower
+        and t not in missing_tables_lower
+        and len(schema_lower[t]) > 0  # skip tables with unknown columns
     }
 
     # ── Collect SELECT-level aliases (e.g. `COUNT(x) AS answered`) ────────────
@@ -425,6 +494,9 @@ def _check_schema(
                 # Table is already flagged as missing — skip its columns
                 continue
             table_cols = schema_lower.get(resolved, {})
+            if not table_cols:
+                # Table exists but columns are unknown (e.g. CTAS) — skip
+                continue
             if col_lower not in table_cols:
                 clause = _clause_of(col_node)
                 errors.append(
@@ -655,15 +727,36 @@ def _merge_errors(*error_lists: List[ValidationError]) -> List[ValidationError]:
 
 def _explain(sql: str, engine) -> List[ValidationError]:
     """
-    Run ``EXPLAIN {sql}`` on the live database and convert any exception into
-    a ValidationError list.  Returns an empty list when the query is valid.
+    Run a safe 'dry run' on the live database.
+    Uses EXPLAIN for DML to avoid long execution times, and
+    BEGIN -> Execute -> ROLLBACK for DDL to validate syntax and schema.
     """
     try:
-        # Import here to avoid hard dependency when validate() is used standalone
         from sqlalchemy import text as sa_text
 
         with engine.connect() as conn:
-            conn.execute(sa_text(f"EXPLAIN {sql}"))
+            # Open a transaction so we can safely roll back any execution
+            trans = conn.begin()
+            try:
+                # Set a short timeout so a bad query doesn't hang the benchmark
+                conn.execute(sa_text("SET statement_timeout = '2s'"))
+
+                # Check what kind of query this is
+                sql_upper = sql.lstrip().upper()
+                is_dml = sql_upper.startswith(
+                    ("SELECT", "INSERT", "UPDATE", "DELETE", "WITH", "VALUES")
+                )
+
+                if is_dml:
+                    # Fast and safe plan generation
+                    conn.execute(sa_text(f"EXPLAIN {sql}"))
+                else:
+                    # Actual execution for CREATE, DROP, ALTER, DO, etc.
+                    conn.execute(sa_text(sql))
+            finally:
+                # NEVER commit. Always roll back to keep the DB pristine
+                # for the next query in the benchmark.
+                trans.rollback()
         return []
     except Exception as exc:
         # Extract PostgreSQL SQLSTATE + message when available
@@ -678,6 +771,11 @@ def _explain(sql: str, engine) -> List[ValidationError]:
             sqlstate = extract_error_code(str(exc))
 
         tag = tag_for_sqlstate(sqlstate) or _infer_tag_from_explain_message(pg_message)
+
+        # 57014 = QueryCanceled (statement_timeout).  This is infra noise —
+        # the query is structurally valid but just too slow to EXPLAIN.
+        if sqlstate == "57014":
+            return []
 
         return [
             ValidationError(

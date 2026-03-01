@@ -1,56 +1,5 @@
 [
   {
-    "instance_id": "PostgreSQL_7",
-    "db_id": "student_club",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT  ARRAY_AGG(DISTINCT u.id) AS ids, ARRAY_AGG(DISTINCT u.username) AS usernames, ARRAY_AGG(DISTINCT u.ref1) AS refs1, ARRAY_AGG(DISTINCT u.ref2) AS refs2,  COUNT(DISTINCT a.id) AS asset_count FROM assets a JOIN users u ON a.owner = u.ref1 OR a.owner = u.ref2 GROUP BY a.owner ORDER BY MIN(a.id);",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'assets' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "assets",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'users' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "users",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0948,
-      "pattern_signature": "SELECT-FROM-JOIN-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT"
-      ],
-      "tables": [
-        "assets",
-        "users"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 6
-    }
-  },
-  {
     "instance_id": "PostgreSQL_10",
     "db_id": "financial",
     "category": "Management",
@@ -119,102 +68,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_21",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT COUNT(*) -1 AS count, MAX(releaseDate), MIN(releaseDate) FROM (SELECT *, date(releaseDate) - row_number() OVER (PARTITION BY releaseDate ORDER BY date(releaseDate)) * INTERVAL '1 day' AS filter FROM sets_releaseInfo ) t1 GROUP BY filter HAVING COUNT(*) -1 > 0 ORDER BY count DESC",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'sets_releaseInfo' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "sets_releaseInfo",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1219,
-      "pattern_signature": "SELECT-FROM-GROUP-HAVING-WINDOW-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WINDOW"
-      ],
-      "tables": [
-        "sets_releaseinfo"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 4
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_22",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE path_cte AS (SELECT id, nextCardId, id::TEXT AS Path FROM collection WHERE nextCardId IS NULL UNION ALL SELECT collection.id, collection.nextCardId, collection.id || ' --> ' || cte.Path FROM collection JOIN path_cte cte ON collection.nextCardId = cte.id) SELECT Path FROM path_cte ORDER BY id;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'collection' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "collection",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'collection' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "collection",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-UNION-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "collection",
-        "path_cte"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
     }
   },
   {
@@ -354,97 +207,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_29",
-    "db_id": "card_games",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "INSERT INTO card_information(price) SELECT jsonb_agg(price) FROM (SELECT price FROM card_information) AS subquery;SELECT * FROM card_information;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_information' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_information",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_information' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_information",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0896,
-      "pattern_signature": "SELECT-FROM-INSERT-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "INSERT",
-        "SELECT",
-        "SUBQUERY"
-      ],
-      "tables": [
-        "card_information"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_31",
-    "db_id": "card_games",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT user_id, COUNT(*) AS num_consecutive_months FROM (SELECT user_id, purchase_date, DATE_TRUNC('month', TO_DATE(purchase_date || '-01', 'YYYY-MM-DD')) AS month_date, ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY DATE_TRUNC('month', TO_DATE(purchase_date || '-01', 'YYYY-MM-DD'))) - ROW_NUMBER() OVER(PARTITION BY user_id, DATE_TRUNC('month', TO_DATE(purchase_date || '-01', 'YYYY-MM-DD')) - INTERVAL '1 month' * ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY DATE_TRUNC('month', TO_DATE(purcha",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'purchase' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "purchase",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1021,
-      "pattern_signature": "SELECT-FROM-GROUP-WINDOW-ORDER-LIMIT-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "LIMIT",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WINDOW"
-      ],
-      "tables": [
-        "purchase"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
     "instance_id": "PostgreSQL_32",
     "db_id": "financial",
     "category": "Personalization",
@@ -562,17 +324,27 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'preference_tag' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'tag' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "preference_tag",
+        "context": "tag",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'tag' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "tag",
+        "affected_clauses": [
+          "WHERE"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0177,
@@ -590,83 +362,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_40",
-    "db_id": "financial",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT *  FROM account_info WHERE ((condition->0->>'conditions')::json->>'rootcompanyid')::json->>'$in' = '[5]';",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'account_info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "account_info",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "account_info"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_51",
-    "db_id": "european_football_2",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT transaction_date AS date, club_name, sum(amount) over (partition by club_name, sign(amount) order by transaction_date) from club_transactions",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'club_transactions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "club_transactions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0167,
-      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW"
-      ],
-      "tables": [
-        "club_transactions"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
     }
   },
   {
@@ -721,59 +416,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_56",
-    "db_id": "card_games",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "DELETE FROM cards WHERE (uuid, setCode, rarity, manaCost) NOT IN ( SELECT uuid, setCode, rarity, manaCost FROM norm1 WHERE uuid IS NOT NULL AND setCode IS NOT NULL AND rarity IS NOT NULL AND manaCost IS NOT NULL ) AND (uuid, setCode, rarity, manaCost) NOT IN ( SELECT uuid, setCode, rarity, manaCost FROM norm2 WHERE uuid IS NOT NULL AND setCode IS NOT NULL AND rarity IS NOT NULL AND manaCost IS NOT NULL ) LIMIT 1000;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'norm1' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "norm1",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'norm2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "norm2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2385,
-      "pattern_signature": "SELECT-FROM-WHERE-LIMIT-DELETE-SUBQUERY",
-      "clauses_present": [
-        "DELETE",
-        "FROM",
-        "LIMIT",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "cards",
-        "norm1",
-        "norm2"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 2,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_62",
     "db_id": "card_games",
     "category": "Query",
@@ -782,37 +424,67 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'user_actions' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "user_actions",
+        "context": "action",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       },
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'user_actions' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action_time' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "user_actions",
+        "context": "action_time",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       },
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'user_actions' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "user_actions",
+        "context": "action",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action_time' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action_time",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "WHERE"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.2552,
@@ -843,15 +515,6 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'decks' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "decks",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
         "tag": "schema_hallucination_col",
         "message": "Column 'card_order' does not exist in any referenced table",
         "taxonomy_category": "semantic",
@@ -859,11 +522,20 @@
         "affected_clauses": [
           "SELECT"
         ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'id' is ambiguous \u2014 exists in tables: cards, decks",
+        "taxonomy_category": "semantic",
+        "context": "id",
+        "affected_clauses": [
+          "WHERE"
+        ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_col"
+      "schema_hallucination_col",
+      "schema_ambiguous_col"
     ],
     "query_metadata": {
       "complexity_score": 0.1146,
@@ -880,221 +552,6 @@
       ],
       "num_joins": 0,
       "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_64",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT ord.order_date, ord.order_id, ord.card_id, prd.price FROM order_cards ord LEFT JOIN (SELECT * FROM card_prices ORDER BY start_date ASC) AS prd ON ord.card_id = prd.card_id AND ord.order_date >= prd.start_date",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'order_cards' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "order_cards",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_prices' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_prices",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1365,
-      "pattern_signature": "SELECT-FROM-JOIN-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY"
-      ],
-      "tables": [
-        "card_prices",
-        "order_cards"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_65",
-    "db_id": "european_football_2",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select player_id, stats_keys, stats_values from player_stats",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_stats' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_stats",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "player_stats"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_66",
-    "db_id": "european_football_2",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "UPDATE teams_config SET configurations = jsonb_set(configurations, '{settings}', (configurations->'id') - (SELECT DISTINCT position - 1 FROM teams_config, jsonb_array_elements(configurations) WITH ORDINALITY arr(elem, position) WHERE elem->>'id' = '101')::int);",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'teams_config' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "teams_config",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'teams_config' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "teams_config",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1229,
-      "pattern_signature": "SELECT-DISTINCT-FROM-JOIN-WHERE-UPDATE-SUBQUERY",
-      "clauses_present": [
-        "DISTINCT",
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "SUBQUERY",
-        "UPDATE",
-        "WHERE"
-      ],
-      "tables": [
-        "teams_config"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_67",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT begin_date, end_date, age(CASE WHEN end_date = date_trunc('month', end_date) + interval '1 month - 1 day' THEN end_date + interval '1 day' ELSE date_trunc('month', end_date) END::date, CASE WHEN begin_date = date_trunc('month', begin_date) THEN begin_date ELSE date_trunc('month', begin_date) + interval '1 month' END::date) AS calculated_months FROM race_dates;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'race_dates' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "race_dates",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "race_dates"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_68",
-    "db_id": "student_club",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "INSERT INTO new_attendance (link_to_event, link_to_member, date)\n    VALUES ('reciRZdAqNIKuMC96', 'recL94zpn6Xh6kQii', NOW())\n    ON CONFLICT\n    WHERE link_to_member='recL94zpn6Xh6kQii' DO NOTHING;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'new_attendance' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "new_attendance",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
-      "pattern_signature": "WHERE-VALUES-INSERT",
-      "clauses_present": [
-        "INSERT",
-        "VALUES",
-        "WHERE"
-      ],
-      "tables": [
-        "new_attendance"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 0
     }
@@ -1255,484 +712,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_75",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT entity_id, coalesce(change->'height', lag(change->'height', 1, null) over (partition by entity_id order by updated_at)) as height, coalesce(change->'weight', lag(change->'weight', 1, null) over (partition by entity_id order by updated_at)) as weight, updated_at FROM ( SELECT entity_id, json_object_agg(column_id, value) as change, updated_at FROM player_stats_changes GROUP BY entity_id, updated_at) as changes;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_stats_changes' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_stats_changes",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1083,
-      "pattern_signature": "SELECT-FROM-GROUP-WINDOW-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WINDOW"
-      ],
-      "tables": [
-        "player_stats_changes"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 3
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_76",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "with qr1(item, subgroup) AS (SELECT id, subgroup1 FROM superhero_group WHERE subgroup1 IS NOT NULL), qr2(item, subgroup) AS (SELECT id, subgroup2 FROM superhero_group WHERE subgroup2 IS NOT NULL) select item, subgroup1, subgroup2, dense_rank() over (order by item) as group from (select qr1.item, qr1.subgroup as subgroup1, qr2.subgroup as subgroup2 from qr1 full outer join qr2 on qr1.item = qr2.item) as combined",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero_group' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero_group",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero_group' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero_group",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1573,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-WINDOW-ORDER-SUBQUERY",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE",
-        "WINDOW",
-        "WITH"
-      ],
-      "tables": [
-        "qr1",
-        "qr2",
-        "superhero_group"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 1,
-      "num_ctes": 2,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_77",
-    "db_id": "superhero",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH r AS (SELECT id, date_of_visit, SUM(sessions) AS sessions, SUM(pageviews) AS pageviews, SUM(bounces) AS bounce, COALESCE(utm_campaign, '') AS utm_campaign, COALESCE(utm_source, '') AS utm_source, COALESCE(utm_medium, '') AS utm_medium, COALESCE(utm_content, '') AS utm_content, COALESCE(utm_term, '') AS utm_term FROM report GROUP BY id, date_of_visit, utm_campaign, utm_source, utm_medium, utm_content, utm_term UNION SELECT id, date_of_visit, SUM(sessions), SUM(pageviews), SUM(bounces), COALE",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'utm' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "utm",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'report' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "report",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2771,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-UNION",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "r",
-        "report",
-        "utm"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 36
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_81",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select rank() over (order by total_points desc) as place, id, name, total_points, race_points, raceId from racers",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'racers' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "racers",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0167,
-      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW"
-      ],
-      "tables": [
-        "racers"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_82",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT month_year, COUNT(DISTINCT customer_id) FROM orders GROUP BY month_year HAVING COUNT(order_id) > 1",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0302,
-      "pattern_signature": "SELECT-FROM-GROUP-HAVING",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "SELECT"
-      ],
-      "tables": [
-        "orders"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_83",
-    "db_id": "european_football_2",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT player_name, event_date as join_date, (SELECT event_date FROM player_movements pm1 WHERE pm1.player_name = pm.player_name AND pm1.event = 'Leave' AND pm1.event_date > pm.event_date) as leave_date FROM player_movements pm WHERE event = 'Join'",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_movements' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_movements",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_movements' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_movements",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.125,
-      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "player_movements"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_87",
-    "db_id": "codebase_community",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "with cte as (select pv1.session_id, pv1.post_id, pv2.view_perc, pv1.ts as start_time, min(pv2.ts) as end_time from view_logs pv1 join view_logs pv2 on pv1.session_id = pv2.session_id and pv1.post_id = pv2.post_id and pv1.event_name <> pv2.event_name and pv1.ts < pv2.ts group by pv1.session_id, pv1.post_id, pv2.view_perc, pv1.ts) select session_id, post_id, start_time, end_time, case when (end_time - start_time > 3  and view_perc > 0.8 )then 'yes' else 'no' end as has_meaningful_view from cte;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'view_logs' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "view_logs",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'view_logs' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "view_logs",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1406,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-GROUP",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "SELECT",
-        "WITH"
-      ],
-      "tables": [
-        "cte",
-        "view_logs"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_90",
-    "db_id": "toxicology",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT SUM(CASE WHEN timestamp::date = '2022-01-27'::date - 1 THEN amount ELSE NULL END) AS yesterday_revenue, ROUND((SUM(CASE WHEN timestamp::date > '2022-01-27'::date - 1 THEN amount ELSE NULL END) - SUM(CASE WHEN timestamp::date = '2022-01-27'::date - 8 THEN amount ELSE NULL END)) / SUM(CASE WHEN timestamp::date = '2022-01-27'::date - 8 THEN amount ELSE NULL END), 2) AS pct_change_week_ago, SUM(CASE WHEN date_trunc('month', timestamp) = date_trunc('month', '2022-01-27'::date - 1) THEN amount ",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'transactions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "transactions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0813,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "transactions"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 8
-    }
-  },
-  {
     "instance_id": "PostgreSQL_93",
     "db_id": "card_games",
     "category": "Query",
@@ -1823,44 +802,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_102",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT SUM(quantity) FROM race_materials WHERE price_per_unit * quantity <= 100;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'race_materials' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "race_materials",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.024,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "race_materials"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
     "instance_id": "PostgreSQL_103",
     "db_id": "european_football_2",
     "category": "Management",
@@ -1869,17 +810,47 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'historical_rating' does not exist in schema",
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_fifa_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
         "taxonomy_category": "semantic",
-        "context": "historical_rating",
+        "context": "player_fifa_api_id",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_fifa_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_fifa_api_id",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_api_id",
+        "affected_clauses": [
+          "GROUP BY"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_ambiguous_col",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0208,
@@ -1909,37 +880,17 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'fact_collection' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'start_date_key' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "fact_collection",
+        "context": "start_date_key",
         "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'dim_set' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "dim_set",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'fact_collection' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "fact_collection",
-        "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.275,
@@ -1961,48 +912,6 @@
       ],
       "num_joins": 2,
       "num_subqueries": 2,
-      "num_ctes": 1,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_106",
-    "db_id": "superhero",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH mission_spans AS ( SELECT hero_id, mission_start, mission_end FROM superhero_missions ORDER BY hero_id, mission_start, mission_end ) SELECT hero_id, MIN(mission_start) OVER (PARTITION BY hero_id), MAX(mission_end) OVER (PARTITION BY hero_id) FROM mission_spans ORDER BY 1, 2, 3",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero_missions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero_missions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0792,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW",
-        "WITH"
-      ],
-      "tables": [
-        "mission_spans",
-        "superhero_missions"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
       "num_ctes": 1,
       "num_aggregations": 2
     }
@@ -2104,7 +1013,7 @@
     "errors": [
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'ID' is ambiguous \u2014 exists in tables: examination, laboratory",
+        "message": "Column 'ID' is ambiguous \u2014 exists in tables: laboratory, examination",
         "taxonomy_category": "semantic",
         "context": "ID",
         "affected_clauses": [
@@ -2139,81 +1048,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_116",
-    "db_id": "european_football_2",
-    "category": "Management",
-    "sql_index": 2,
-    "sql": "INSERT INTO public.source_table (\n    created_at,\n    match_id,\n    player_id,\n    event_type,\n    url,\n    data\n)\nVALUES (\n    NOW(),\n101,\n202,\n'goal',\n'http://example.com?foo=bar',\n'{\n        \"local_storage\": {\n            \"data\": {\n                \"user_id\": \"u12345\"\n            }\n        }\n    }'::jsonb\n);",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'source_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "source_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "VALUES-INSERT",
-      "clauses_present": [
-        "INSERT",
-        "VALUES"
-      ],
-      "tables": [
-        "source_table"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_119",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select item_id, item_price as retail_price, sum(coalesce(uses_item_price, 0) * quantity) + sum(coalesce(resource_price*quantity, 0))  as partial_craft_price FROM store GROUP BY item_id, retail_price;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'store' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "store",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0229,
-      "pattern_signature": "SELECT-FROM-GROUP",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "SELECT"
-      ],
-      "tables": [
-        "store"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
     "instance_id": "PostgreSQL_120",
     "db_id": "superhero",
     "category": "Management",
@@ -2241,258 +1075,6 @@
       ],
       "num_joins": 0,
       "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_122",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT hbi.id, hbi.hero_name, hbi.birthdate, hbialt.date_of_birth FROM hero_birth_info hbi LEFT JOIN hero_birth_info_alt hbialt ON hbi.id = hbialt.id",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'hero_birth_info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "hero_birth_info",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'hero_birth_info_alt' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "hero_birth_info_alt",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0469,
-      "pattern_signature": "SELECT-FROM-JOIN",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT"
-      ],
-      "tables": [
-        "hero_birth_info",
-        "hero_birth_info_alt"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_124",
-    "db_id": "card_games",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "UPDATE card_versions SET seqnr=seqnr+1 WHERE defn_id = 100 AND attr_id = 100 AND seqnr >= 1",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_versions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_versions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0385,
-      "pattern_signature": "WHERE-UPDATE",
-      "clauses_present": [
-        "UPDATE",
-        "WHERE"
-      ],
-      "tables": [
-        "card_versions"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_125",
-    "db_id": "european_football_2",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "UPDATE team_attributes SET attributes_jsonb = jsonb_insert('{}', '{buildupplayspeed}', buildupplayspeed) WHERE team_api_id = 1773;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_col",
-        "message": "Column 'attributes_jsonb' does not exist in any referenced table",
-        "taxonomy_category": "semantic",
-        "context": "attributes_jsonb"
-      }
-    ],
-    "tags": [
-      "schema_hallucination_col"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
-      "pattern_signature": "WHERE-UPDATE",
-      "clauses_present": [
-        "UPDATE",
-        "WHERE"
-      ],
-      "tables": [
-        "team_attributes"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_125",
-    "db_id": "european_football_2",
-    "category": "Management",
-    "sql_index": 1,
-    "sql": "SELECT id, attributes_jsonb FROM team_attributes WHERE team_api_id = 1773 ORDER BY id;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_col",
-        "message": "Column 'attributes_jsonb' does not exist in any referenced table",
-        "taxonomy_category": "semantic",
-        "context": "attributes_jsonb",
-        "affected_clauses": [
-          "SELECT"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_col"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
-      "pattern_signature": "SELECT-FROM-WHERE-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "team_attributes"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_126",
-    "db_id": "toxicology",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE atom_ancestors AS ( SELECT atom_id, parent_id, enabled FROM connection WHERE atom_id = 4 UNION ALL SELECT c.atom_id, c.parent_id, c.enabled FROM connection c INNER JOIN atom_ancestors aa ON c.atom_id = aa.parent_id) SELECT * FROM atom_ancestors",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'connection' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "connection",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'connection' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "connection",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-WHERE-UNION",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "JOIN_INNER",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "atom_ancestors",
-        "connection"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_127",
-    "db_id": "card_games",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "select customerid,\n       (select jsonb_agg(t->>'dis') from jsonb_array_elements(preference::jsonb) as x(t) where t->>'dis' is not null) as sdata\nfrom card_preference where customerid='123.abc'",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_preference' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_preference",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1042,
-      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "card_preference"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
       "num_ctes": 0,
       "num_aggregations": 0
     }
@@ -2607,146 +1189,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_134",
-    "db_id": "california_schools",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT s.firstName, jsonb_agg(DISTINCT jsonb_build_object('yearId', y.id, 'classes', (SELECT jsonb_agg(jsonb_build_object('classId', c.id)) FROM classes AS c WHERE y.id = cy.yearId AND c.id = cy.classId AND s.id = cys.studentId))) AS years FROM users3 AS s LEFT JOIN classYearStudents AS cys ON cys.studentId = s.id LEFT JOIN classYears AS cy ON cy.id = cys.classYearId LEFT JOIN years AS y ON y.id = cy.yearId GROUP BY s.id order by s.id",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'users3' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "users3",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'classYearStudents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "classYearStudents",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'classYears' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "classYears",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'years' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "years",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'classes' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "classes",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2375,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "classes",
-        "classyears",
-        "classyearstudents",
-        "users3",
-        "years"
-      ],
-      "num_joins": 3,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_135",
-    "db_id": "thrombosis_prediction",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE EmpMgrCTE AS (SELECT id, bossid, salary, 0 as EmployeeLevel FROM staff WHERE bossid IS NULL UNION ALL SELECT emp.id, emp.bossid, emp.salary, mgr.EmployeeLevel + 1 as EmployeeLevel FROM staff emp INNER JOIN EmpMgrCTE mgr ON emp.bossid = mgr.id) SELECT * FROM EmpMgrCTE emp",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'staff' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "staff",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'staff' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "staff",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-WHERE-UNION",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "JOIN_INNER",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "empmgrcte",
-        "staff"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_137",
     "db_id": "financial",
     "category": "Management",
@@ -2816,35 +1258,15 @@
     "errors": [
       {
         "tag": "schema_hallucination_table",
-        "message": "Table 'transfer' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "transfer",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
         "message": "Table 'cte' does not exist in schema",
         "taxonomy_category": "semantic",
         "context": "cte",
         "affected_clauses": [
           "FROM"
         ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'transfer' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "transfer",
-        "affected_clauses": [
-          "FROM"
-        ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
       "schema_hallucination_table"
     ],
     "query_metadata": {
@@ -2898,86 +1320,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_142",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select t1.table_name as t1_table_name, t2.table_name as t2_extra_tables_in_schema from required_tables t1 right join information_schema.tables t2 on t1.table_name = t2.table_name where t2.table_schema='public' and t1.table_name IS NULL;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'required_tables' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "required_tables",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0646,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "required_tables",
-        "tables"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_142",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 1,
-    "sql": "select t1.table_name as t1_tables_missing_from_schema, t2.table_name from required_tables t1 left join information_schema.tables t2 on t1.table_name = t2.table_name where t2.table_schema='public' and t2.table_name IS NULL;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'required_tables' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "required_tables",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0646,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "required_tables",
-        "tables"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_145",
     "db_id": "european_football_2",
     "category": "Personalization",
@@ -2986,17 +1328,37 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_skills' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'name' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "player_skills",
+        "context": "name",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'd' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "d",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'skills' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "skills",
+        "affected_clauses": [
+          "JOIN"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0365,
@@ -3010,43 +1372,6 @@
         "player_skills"
       ],
       "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_146",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT CASE when (t.events::json->0->'id')::varchar::int = 2 then (t.events::json->0)::varchar when (t.events::json->1->'id')::varchar::int = 2 then (t.events::json->1)::varchar when (t.events::json->2->'id')::varchar::int = 2 then (t.events::json->2)::varchar else null::varchar end as \"result\" FROM match_events as t;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'match_events' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "match_events",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "match_events"
-      ],
-      "num_joins": 0,
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 0
@@ -3143,209 +1468,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_148",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH player_names AS (SELECT 1 AS source, ROW_NUMBER() OVER (ORDER BY player_name) AS row_number, CONCAT(player_name, '(', LEFT(birthday, 4), ')') AS dest FROM player_table), birth_year_summary AS (SELECT 2 AS source, ROW_NUMBER() OVER (ORDER BY COUNT(*), LEFT(birthday, 4)) AS row_number, CONCAT('There are a total of ', COUNT(*), ' player', CASE WHEN COUNT(*) > 1 THEN 's' ELSE '' END, ' born in ', LEFT(birthday, 4), '.') AS dest FROM player_table GROUP BY LEFT(birthday, 4)) SELECT dest FROM (SEL",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1292,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-GROUP-WINDOW-UNION-ORDER-SUBQUERY",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "UNION",
-        "WINDOW",
-        "WITH"
-      ],
-      "tables": [
-        "birth_year_summary",
-        "player_names",
-        "player_table"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 2,
-      "num_aggregations": 3
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_150",
-    "db_id": "formula_1",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT r.id, r.start_day, r.end_day, de.point_of_delivery_plant_name, de.point_of_delivery_plant_number, de.visit_status FROM route r JOIN route_detail de ON de.route_id = r.id WHERE NOT EXISTS (SELECT 1 FROM route ro JOIN route_detail rd ON rd.route_id = ro.id JOIN route_event ev ON ev.route_detail_id = rd.id WHERE rd.route_id = r.id AND ev.event_type !=3 AND rd.visit_status = '5' AND rd.id = de.id) AND de.visit_status = '5' GROUP BY 1,2,3,4,5,6 ORDER BY r.id;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'route' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "route",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'route_detail' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "route_detail",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'route' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "route",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'route_detail' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "route_detail",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'route_event' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "route_event",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1656,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "route",
-        "route_detail",
-        "route_event"
-      ],
-      "num_joins": 3,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_153",
-    "db_id": "superhero",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE cte AS ( SELECT id, parent_id, color FROM superhero2 WHERE parent_id IS NULL UNION ALL SELECT s.id, s.parent_id, CASE WHEN c1.color IS NULL THEN c2.color WHEN c2.color IS NULL THEN c1.color WHEN c1.color = c2.color THEN c1.color ELSE 'gray' END AS color FROM superhero2 s LEFT JOIN cte c1 ON s.id = c1.parent_id LEFT JOIN cte c2 ON s.id = c2.parent_id ) UPDATE superhero2 SET color = cte.color FROM cte WHERE superhero2.id = cte.id",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1333,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-UNION-UPDATE",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "UNION",
-        "UPDATE",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "cte",
-        "superhero2"
-      ],
-      "num_joins": 2,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_155",
     "db_id": "formula_1",
     "category": "Personalization",
@@ -3377,45 +1499,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_157",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT ts, superhero_id, activity_code, LEAD(ts) OVER (PARTITION BY superhero_id, activity_code ORDER BY ts) as next_ts FROM superhero_activities",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero_activities' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero_activities",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0167,
-      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW"
-      ],
-      "tables": [
-        "superhero_activities"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
     "instance_id": "PostgreSQL_158",
     "db_id": "card_games",
     "category": "Query",
@@ -3424,27 +1507,37 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_matches' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'type' does not exist in table 'card_players' (referenced as 'card_players.type')",
         "taxonomy_category": "semantic",
-        "context": "card_matches",
+        "context": "card_players.type",
         "affected_clauses": [
-          "FROM"
+          "WHERE"
         ]
       },
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_players' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'player1_id' does not exist in table 'card_matches' (referenced as 'card_matches.player1_id')",
         "taxonomy_category": "semantic",
-        "context": "card_players",
+        "context": "card_matches.player1_id",
         "affected_clauses": [
-          "FROM"
+          "JOIN"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'player2_id' does not exist in table 'card_matches' (referenced as 'card_matches.player2_id')",
+        "taxonomy_category": "semantic",
+        "context": "card_matches.player2_id",
+        "affected_clauses": [
+          "JOIN"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0708,
@@ -3464,108 +1557,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_161",
-    "db_id": "card_games",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT c.*\nFROM cards_info c\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM card_choice cc\n    WHERE cc.card_id = c.id\n    AND c.id = ANY (cc.non_valid_cards)\n);",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'cards_info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "cards_info",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_choice' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_choice",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0458,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "card_choice",
-        "cards_info"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_162",
-    "db_id": "card_games",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE nodes AS (\n    SELECT\n        uuid,\n        card_name AS name,\n        ARRAY[]::uuid[] AS parents\n    FROM card_type\n    WHERE parent_uuid IS NULL\n\n    UNION ALL\n\n    SELECT\n        c.uuid,\n        c.card_name AS name,\n        nodes.parents || c.uuid\n    FROM card_type c\n    JOIN nodes ON nodes.uuid = c.parent_uuid\n)\nSELECT * FROM nodes;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_type' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_type",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_type' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_type",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-UNION",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "card_type",
-        "nodes"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
     }
   },
   {
@@ -3619,17 +1610,21 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_counters' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'counters' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "card_counters",
-        "affected_clauses": [
-          "FROM"
-        ]
+        "context": "counters"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'counters' does not exist in table 'card_counters' (referenced as 'card_counters.counters')",
+        "taxonomy_category": "semantic",
+        "context": "card_counters.counters"
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0167,
@@ -3656,15 +1651,6 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'SelectQuery' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "SelectQuery",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
         "tag": "schema_hallucination_col",
         "message": "Column 'elem' does not exist in any referenced table",
         "taxonomy_category": "semantic",
@@ -3684,7 +1670,6 @@
       }
     ],
     "tags": [
-      "schema_hallucination_table",
       "schema_hallucination_col",
       "schema_hallucination_col"
     ],
@@ -3707,46 +1692,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_174",
-    "db_id": "toxicology",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT date_trunc('week', \"TIMESTAMP\") AS week, count(*), AVG(\"CL\") AS cl, AVG(\"C\") AS c FROM \"Experiment\" WHERE \"TIMESTAMP\" >= '2021-01-07T00:00:00.000Z' AND \"TIMESTAMP\" <= '2022-01-06T23:59:59.999Z' GROUP BY week ORDER BY week ASC",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Experiment' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Experiment",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0469,
-      "pattern_signature": "SELECT-FROM-WHERE-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "experiment"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 3
     }
   },
   {
@@ -3787,43 +1732,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_178",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select (coalesce(circui_name_A1, '') || ' ' || coalesce(circui_name_A2,'') || ' ' || coalesce(circui_name_A3, '')) as A, (coalesce(circui_name_B1, '') || ' ' || coalesce(circui_name_B2,'') || ' ' || coalesce(circui_name_B3, '')) as B from race_info;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'race_info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "race_info",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "race_info"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_179",
     "db_id": "card_games",
     "category": "Query",
@@ -3832,27 +1740,27 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_prices' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date_value' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "card_prices",
+        "context": "date_value",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       },
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_prices' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date_value' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "card_prices",
+        "context": "date_value",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.1875,
@@ -3889,17 +1797,27 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'bond_strength' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'strength' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "bond_strength",
+        "context": "strength",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'strength' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "strength",
+        "affected_clauses": [
+          "GROUP BY"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.024,
@@ -3932,20 +1850,10 @@
         "message": "Unbalanced parentheses or brackets",
         "taxonomy_category": "syntax",
         "context": "1 unclosed '('"
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'cards_info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "cards_info",
-        "affected_clauses": [
-          "FROM"
-        ]
       }
     ],
     "tags": [
-      "syntax_unbalanced_tokens",
-      "schema_hallucination_table"
+      "syntax_unbalanced_tokens"
     ],
     "query_metadata": {
       "complexity_score": 0.1,
@@ -3965,322 +1873,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_183",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH RNG AS(SELECT date_num, product_id, sales_value FROM sales_data WHERE (date_num = 123 OR date_num=567) ORDER BY date_num) SELECT date_num, product_id, sales_value, SUM(sales_value) AS trend FROM RNG group by date_num, product_id, sales_value",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'sales_data' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "sales_data",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0906,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-WHERE-GROUP-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "rng",
-        "sales_data"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_184",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "DROP TABLE IF EXISTS temp_superhero;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'temp_superhero' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "temp_superhero",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "UNKNOWN",
-      "clauses_present": [],
-      "tables": [
-        "temp_superhero"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_184",
-    "db_id": "superhero",
-    "category": "Query",
-    "sql_index": 3,
-    "sql": "SELECT * FROM insert_and_return(10), temp_superhero AS y;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'temp_superhero' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "temp_superhero",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0365,
-      "pattern_signature": "SELECT-FROM-JOIN",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT"
-      ],
-      "tables": [
-        "temp_superhero"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_187",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH variables_array AS (SELECT datapoint_id, ARRAY_AGG(variablevalue_id) AS varvalues FROM datapoint_variablevalue GROUP BY datapoint_id) SELECT COALESCE(SUM(dp.value),0), sd.name AS sp_name, v.varvalues AS varvalues, td.years AS years FROM variables_array v CROSS JOIN spatial_dimension sd CROSS JOIN time_dimension td LEFT JOIN datapoints dp ON dp.id = v.datapoint_id AND dp.spatial_dimension_id = sd.id AND dp.time_dimension_id = td.id GROUP BY years, sp_name, varvalues ORDER BY years DESC",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'spatial_dimension' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "spatial_dimension",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'time_dimension' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "time_dimension",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'datapoints' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "datapoints",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'datapoint_variablevalue' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "datapoint_variablevalue",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2094,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_CROSS-GROUP-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "JOIN_CROSS",
-        "ORDER",
-        "SELECT",
-        "WITH"
-      ],
-      "tables": [
-        "datapoint_variablevalue",
-        "datapoints",
-        "spatial_dimension",
-        "time_dimension",
-        "variables_array"
-      ],
-      "num_joins": 3,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_189",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 1,
-    "sql": "SELECT lcp(event_description) AS common_prefix FROM match_events;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'match_events' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "match_events",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "match_events"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_191",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT match_id, match_date FROM detail WHERE match_details @@ '$.player_stats[*] ? (@.player_id == :player_id).goals > 0';",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'detail' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "detail",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "detail"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_194",
-    "db_id": "european_football_2",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "CREATE UNIQUE INDEX conditional_unique_index ON match_results (match_id, team_id) WHERE (SELECT COUNT(*) FROM match_results t2 WHERE t2.match_id = match_results.match_id AND t2.team_id = match_results.team_id) = 1;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_col",
-        "message": "Column 'match_id' does not exist in table 'match_results' (referenced as 'match_results.match_id')",
-        "taxonomy_category": "semantic",
-        "context": "match_results.match_id",
-        "affected_clauses": [
-          "WHERE"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_col",
-        "message": "Column 'team_id' does not exist in table 'match_results' (referenced as 'match_results.team_id')",
-        "taxonomy_category": "semantic",
-        "context": "match_results.team_id",
-        "affected_clauses": [
-          "WHERE"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_col",
-      "schema_hallucination_col"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1208,
-      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "match_results"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
     "instance_id": "PostgreSQL_195",
     "db_id": "california_schools",
     "category": "Personalization",
@@ -4289,17 +1881,47 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'budgets' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'rate' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "budgets",
+        "context": "rate",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'rate' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "rate",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'time_span' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "time_span",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'time_span' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "time_span",
+        "affected_clauses": [
+          "SELECT"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0896,
@@ -4411,17 +2033,17 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'match_location' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'location' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "match_location",
+        "context": "location",
         "affected_clauses": [
-          "FROM"
+          "WHERE"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0177,
@@ -4441,184 +2063,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_206",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT learner_code, resource_key, SUM(duration) AS total_time_spent\nFROM event_usage\nWHERE start_timestamp BETWEEN '2024-10-01' AND '2024-10-09'\nGROUP BY learner_code, resource_key;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'event_usage' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "event_usage",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.024,
-      "pattern_signature": "SELECT-FROM-WHERE-GROUP",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "event_usage"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_207",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT\n  first_value(rating) OVER (\n    PARTITION BY learner_code, resource_key\n    ORDER BY usage_date\n    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW\n  ) AS filled_rating,\n  learner_code,\n  resource_key\nFROM\n  resource_usage_2\nORDER BY\n  learner_code, usage_date;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'resource_usage_2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "resource_usage_2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0167,
-      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW"
-      ],
-      "tables": [
-        "resource_usage_2"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_208",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT dd::date AS day_start, SUM(CASE WHEN T.incident_start <= dd AND T.incident_end >= dd THEN 1440 ELSE 0 END) AS incident_minutes FROM generate_series('2022-01-01'::timestamp, '2022-01-31'::timestamp, '1 day'::interval) dd LEFT JOIN race_incidents T ON dd::date BETWEEN T.incident_start AND T.incident_end GROUP BY dd::date ORDER BY dd::date",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'race_incidents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "race_incidents",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0531,
-      "pattern_signature": "SELECT-FROM-JOIN-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT"
-      ],
-      "tables": [
-        "race_incidents"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_212",
-    "db_id": "erolp",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "INSERT INTO customer_orders(name, title) SELECT COALESCE(uo.name, co.name), COALESCE(uo.title, co.title) FROM customer_orders co LEFT OUTER JOIN updated_orders uo ON uo.id = co.id",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customer_orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customer_orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customer_orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customer_orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'updated_orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "updated_orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0469,
-      "pattern_signature": "SELECT-FROM-JOIN-INSERT",
-      "clauses_present": [
-        "FROM",
-        "INSERT",
-        "JOIN",
-        "SELECT"
-      ],
-      "tables": [
-        "customer_orders",
-        "updated_orders"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_213",
     "db_id": "superhero",
     "category": "Query",
@@ -4630,20 +2074,10 @@
         "tag": "syntax_keyword_misuse",
         "message": "Expecting an aggregation function in PIVOT. Line 1, Col: 103.\n  SELECT superhero_name, performance_date, attribute_name, result FROM superhero_performance PIVOT(\u001b[4mresult\u001b[0m FOR attribute_name IN (Strength, Speed, Intelligence))\n\nRequired keyword: 'this' missing for <class 'sqlglot.expressions.Alias'>. Line 1, Col: 107.\n  CT superhero_name, performance_date, attribute_name, result FROM superhero_performance PIVOT(result \u001b[4mFOR\u001b[0m attribute_name IN (Strength, Speed, Intelligence))",
         "taxonomy_category": "syntax"
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'superhero_performance' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "superhero_performance",
-        "affected_clauses": [
-          "FROM"
-        ]
       }
     ],
     "tags": [
-      "syntax_keyword_misuse",
-      "schema_hallucination_table"
+      "syntax_keyword_misuse"
     ],
     "query_metadata": {
       "complexity_score": 0.0104,
@@ -4774,17 +2208,21 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'patients_info' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'general_info' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "patients_info",
-        "affected_clauses": [
-          "FROM"
-        ]
+        "context": "general_info"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'general_info' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "general_info"
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0104,
@@ -4802,150 +2240,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_224",
-    "db_id": "toxicology",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT b.molecule_id, b.date AS buy_date, s.date AS sell_date, s.molecules, b.usd_total AS buy_usd_total, s.usd_total AS sell_usd_total FROM transaction b JOIN transaction s ON b.molecule_id = s.molecule_id WHERE b.sell = 0 AND s.sell = 1 ORDER BY b.date, s.date",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'transaction' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "transaction",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'transaction' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "transaction",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0542,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-ORDER",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "transaction"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_225",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE weekdays AS ( SELECT generate_series(0, 60) AS offset ), dates AS ( SELECT CURRENT_DATE + (w.offset || ' days')::interval AS date, EXTRACT(ISODOW FROM CURRENT_DATE + (w.offset || ' days')::interval) AS day_of_week FROM weekdays w WHERE EXTRACT(ISODOW FROM CURRENT_DATE + (w.offset || ' days')::interval) IN (1, 2, 3, 4, 5, 6, 7) ), schedule_blocks_with_dates AS ( SELECT sb.*, d.date AS block_date FROM schedule_blocks sb JOIN dates d ON sb.day_of_week ILIKE to_char(d.date, 'Day') WHE",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'schedule_blocks' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "schedule_blocks",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.149,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "dates",
-        "schedule_blocks",
-        "schedule_blocks_with_dates",
-        "weekdays"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 3,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_235",
-    "db_id": "esophageal",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "MERGE INTO treatment_and_followup_backup b USING treatment_and_followup_latest a ON b.patient_id = a.patient_id WHEN MATCHED THEN UPDATE SET followup_no = a.followup_no, primary_pathology_karnofsky_performance_score = a.primary_pathology_karnofsky_performance_score, primary_pathology_eastern_cancer_oncology_group = a.primary_pathology_eastern_cancer_oncology_group WHEN NOT MATCHED THEN INSERT (patient_id, followup_no, primary_pathology_karnofsky_performance_score, primary_pathology_eastern_cance",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'treatment_and_followup_backup' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "treatment_and_followup_backup",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'treatment_and_followup_latest' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "treatment_and_followup_latest",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0208,
-      "pattern_signature": "INSERT-UPDATE-MERGE",
-      "clauses_present": [
-        "INSERT",
-        "MERGE",
-        "UPDATE"
-      ],
-      "tables": [
-        "treatment_and_followup_backup",
-        "treatment_and_followup_latest"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_236",
     "db_id": "erolp",
     "category": "Personalization",
@@ -4954,17 +2248,17 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'learners_array' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'engagement_history' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "learners_array",
+        "context": "engagement_history",
         "affected_clauses": [
-          "FROM"
+          "SELECT"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0104,
@@ -5024,111 +2318,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_241",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select device_info::json ->> 'SerialNumber' as SerialNumber, cto ->> 'ChannelId'::INT   AS channelid, cto ->> 'ChannelName' AS ChannelName from device_details CROSS JOIN LATERAL json_array_elements(device_info::json ->'ChannelListDto') Channels(cto);",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'device_details' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "device_details",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0365,
-      "pattern_signature": "SELECT-FROM-JOIN-JOIN_CROSS-LATERAL",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "JOIN_CROSS",
-        "LATERAL",
-        "SELECT"
-      ],
-      "tables": [
-        "device_details"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_243",
-    "db_id": "erolp",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH links AS (SELECT greatest(link.source_cluster, link.target_cluster) AS big, least(link.source_cluster, link.target_cluster) AS smol, link.type AS type FROM link AS link) SELECT l.cluster AS left_id, l.cluster_type AS left_type, l.cluster_label AS left_label, r.cluster AS right_id, r.cluster_type AS right_type, r.cluster_label AS right_label, count(distinct(l.article)) AS articles, array_agg(distinct(links.type)) AS link_types FROM tag AS r, tag AS l JOIN links ON l.cluster = links.big WHERE",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'tag' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "tag",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'tag' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "tag",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'link' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "link",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.176,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "link",
-        "links",
-        "tag"
-      ],
-      "num_joins": 2,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 3
     }
   },
   {
@@ -5215,94 +2404,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_255",
-    "db_id": "erolp",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT ST_Touches(ol.geom, l.geom)\nFROM institution_location ol, learner_institution_location l\nWHERE ST_Touches(ol.geom, l.geom)",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'institution_location' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "institution_location",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'learner_institution_location' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "learner_institution_location",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0542,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "institution_location",
-        "learner_institution_location"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_259",
-    "db_id": "erolp",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT product_id FROM product WHERE product_id IN (101, 103) AND is_searchable = true",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'product' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "product",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0281,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "product"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_260",
     "db_id": "erolp",
     "category": "Query",
@@ -5311,245 +2412,30 @@
     "valid": false,
     "errors": [
       {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
+        "tag": "schema_hallucination_col",
+        "message": "Column 'customer_id' does not exist in any referenced table",
         "taxonomy_category": "semantic",
-        "context": "orders",
+        "context": "customer_id",
         "affected_clauses": [
-          "FROM"
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'product_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "product_id",
+        "affected_clauses": [
+          "WHERE"
         ]
       }
     ],
     "tags": [
-      "schema_hallucination_table"
+      "schema_hallucination_col",
+      "schema_hallucination_col"
     ],
     "query_metadata": {
       "complexity_score": 0.0281,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "orders"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_261",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT DISTINCT transaction_date, salesperson_name FROM sales_log WHERE salesperson_name NOT IN (SELECT salesperson_name FROM sales_log GROUP BY transaction_date, salesperson_name)",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'sales_log' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "sales_log",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'sales_log' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "sales_log",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0969,
-      "pattern_signature": "SELECT-DISTINCT-FROM-WHERE-GROUP-SUBQUERY",
-      "clauses_present": [
-        "DISTINCT",
-        "FROM",
-        "GROUP",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "sales_log"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_262",
-    "db_id": "financial",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT p.product_id, p.product_name FROM Product p JOIN ProductPrice pp ON p.product_id = pp.product_id WHERE pp.price < ( SELECT MAX(price) FROM ProductPrice WHERE product_id = p.product_id ) ORDER BY p.product_id;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Product' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Product",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'ProductPrice' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "ProductPrice",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'ProductPrice' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "ProductPrice",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1469,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "product",
-        "productprice"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_263",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT CD.customer_id, COUNT(S.customer_id) AS total_sales, SUM(S.amount) AS total_amount, COUNT(C.customer_id) AS total_communications, COUNT(F.customer_id) AS total_feedback, COUNT(F.customer_id) FILTER (WHERE F.feedback_type='positive') AS total_positive_feedback, COUNT(F.customer_id) FILTER (WHERE F.feedback_type='negative') AS total_negative_feedback FROM customer_details CD JOIN sales S ON CD.customer_id = S.customer_id JOIN communications C ON CD.customer_id = C.customer_id JOIN feedback ",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customer_details' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customer_details",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'sales' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "sales",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'communications' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "communications",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'feedback' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "feedback",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1719,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-FILTER",
-      "clauses_present": [
-        "FILTER",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "communications",
-        "customer_details",
-        "feedback",
-        "sales"
-      ],
-      "num_joins": 3,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 6
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_265",
-    "db_id": "erolp",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT * FROM orders WHERE '10015' = ANY(string_to_array(orders.delivery_zones, ','))",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0177,
       "pattern_signature": "SELECT-FROM-WHERE",
       "clauses_present": [
         "FROM",
@@ -5754,13 +2640,13 @@
       },
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'name' is ambiguous \u2014 exists in tables: country, league",
+        "message": "Column 'name' is ambiguous \u2014 exists in tables: league, country",
         "taxonomy_category": "semantic",
         "context": "name"
       },
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'name' is ambiguous \u2014 exists in tables: country, league",
+        "message": "Column 'name' is ambiguous \u2014 exists in tables: league, country",
         "taxonomy_category": "semantic",
         "context": "name"
       }
@@ -5996,7 +2882,7 @@
     "errors": [
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: cards, rulings",
+        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: rulings, cards",
         "taxonomy_category": "semantic",
         "context": "uuid",
         "affected_clauses": [
@@ -6005,7 +2891,7 @@
       },
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: cards, rulings",
+        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: rulings, cards",
         "taxonomy_category": "semantic",
         "context": "uuid",
         "affected_clauses": [
@@ -6123,540 +3009,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_319",
-    "db_id": "codebase_community",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT id, SUM(count) AS COUNT, SUM(excerptpostid) AS EXCERPTPOSTID FROM backup_colour",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'backup_colour' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "backup_colour",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0229,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "backup_colour"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_320",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT id FROM cards JOIN decks ON cards.id = decks.card1_id WHERE decks.card1_id <> 1",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'decks' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "decks",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0542,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "cards",
-        "decks"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_322",
-    "db_id": "european_football_2",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT team_list.t_id FROM team_list LEFT JOIN detail ON team_list.t_id = detail.t_id WHERE detail.type IN ('a', 'b') GROUP BY team_list.t_id HAVING COUNT(DISTINCT detail.type) = 2",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'team_list' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "team_list",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'detail' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "detail",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0677,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-HAVING",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "detail",
-        "team_list"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_323",
-    "db_id": "debit_card_specializing",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH MissingValues AS (SELECT a.id + 1 AS missing_value FROM worker1 AS a LEFT JOIN worker1 AS b ON a.id + 1 = b.id WHERE b.id IS NULL) SELECT MIN(missing_value) AS lowest_missing_value FROM missingvalues WHERE NOT missing_value IN (SELECT id FROM worker2)",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'worker1' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "worker1",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'worker1' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "worker1",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'worker2' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "worker2",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1573,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-SUBQUERY",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "missingvalues",
-        "worker1",
-        "worker2"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 1,
-      "num_ctes": 1,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_324",
-    "db_id": "debit_card_specializing",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT userid, RANK() OVER (ORDER BY viewcount, favoritecount, upvotecount DESC) as view_rank, RANK() OVER (ORDER BY viewcount, favoritecount, upvotecount DESC) as favorite_rank, RANK() OVER (ORDER BY viewcount, favoritecount, upvotecount DESC) as upvote_rank FROM user_record ORDER BY userid",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'user_record' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "user_record",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0292,
-      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
-      "clauses_present": [
-        "FROM",
-        "ORDER",
-        "SELECT",
-        "WINDOW"
-      ],
-      "tables": [
-        "user_record"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 3
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_325",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT CAST(SUM(CASE WHEN p2.product_name = 'Product Y' THEN 1 ELSE 0 END) AS DOUBLE PRECISION) / NULLIF(COUNT(*), 0) AS percent_Y_after_X FROM orders AS p1 JOIN orders AS p2 ON p1.customer_id = p2.customer_id WHERE p1.product_name = 'Product X' AND p1.purchase_rank + 1 = p2.purchase_rank",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0667,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "orders"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_325",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 1,
-    "sql": "SELECT CAST(SUM(CASE WHEN p2.product_name = 'Product Z' THEN 1 ELSE 0 END) AS DOUBLE PRECISION) / NULLIF(COUNT(*), 0) AS percent_Z_after_X FROM orders AS p1 JOIN orders AS p2 ON p1.customer_id = p2.customer_id WHERE p1.product_name = 'Product X' AND p1.purchase_rank + 1 = p2.purchase_rank",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0667,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "orders"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_325",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 2,
-    "sql": "SELECT CAST(SUM(CASE WHEN p2.product_name = 'Product Z' THEN 1 ELSE 0 END) AS DOUBLE PRECISION) / NULLIF(COUNT(*), 0) AS percent_Z_after_Y FROM orders AS p1 JOIN orders AS p2 ON p1.customer_id = p2.customer_id WHERE p1.product_name = 'Product Y' AND p1.purchase_rank + 1 = p2.purchase_rank",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'orders' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "orders",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0667,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "orders"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_326",
-    "db_id": "financial",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT SUM(t1.quantity) AS total FROM products AS t1 LEFT JOIN records AS t2 ON t1.order_id = t2.order_id WHERE t2.order_status = 'A'",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'products' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "products",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'records' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "records",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0604,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "products",
-        "records"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_327",
-    "db_id": "card_games",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT type, COUNT(*) AS type_count FROM card_type WHERE cardid IN (SELECT DISTINCT cardid FROM info) GROUP BY type ORDER BY type_count DESC NULLS LAST",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'card_type' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "card_type",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'info' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "info",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1135,
-      "pattern_signature": "SELECT-DISTINCT-FROM-WHERE-GROUP-ORDER-SUBQUERY",
-      "clauses_present": [
-        "DISTINCT",
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "card_type",
-        "info"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_328",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT results.score, scores.value, scores.segment FROM customer_scores AS scores JOIN customer_results AS results ON scores.segment = results.segment WHERE results.score >= scores.score GROUP BY scores.segment ORDER BY scores.customerid DESC NULLS LAST",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customer_scores' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customer_scores",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customer_results' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customer_results",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0542,
-      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "customer_results",
-        "customer_scores"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_332",
     "db_id": "codebase_community",
     "category": "Query",
@@ -6692,43 +3044,6 @@
       "num_subqueries": 0,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_334",
-    "db_id": "card_games",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "INSERT INTO session_card (session_id, card_id, card_mode) VALUES (9410, 256, 'rw')",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'session_card' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "session_card",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "VALUES-INSERT",
-      "clauses_present": [
-        "INSERT",
-        "VALUES"
-      ],
-      "tables": [
-        "session_card"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
     }
   },
   {
@@ -6768,104 +3083,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_337",
-    "db_id": "card_games",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "SELECT * FROM rules AS t1 WHERE t1.valid_from <= '2024-12-31' AND (t1.valid_to >= '2022-07-01' OR t1.valid_to IS NULL) AND NOT EXISTS(SELECT 1 FROM rules AS t2 WHERE t2.valid_from > t1.valid_from AND t2.valid_from <= '2024-12-31' AND (t2.valid_to IS NULL OR t2.valid_to > '2022-07-01') AND t2.valid_from <= COALESCE(t1.valid_to, '2024-12-31'))",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'rules' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "rules",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'rules' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "rules",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0979,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "rules"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_338",
-    "db_id": "debit_card_specializing",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "SELECT t1.product_code, t1.product_id, t1.assign_key, STRING_AGG(t2.value_name, ',') FROM products_sample AS t1 LEFT JOIN value_list AS t2 ON t2.value_id::text = ANY(string_to_array(t1.assign_key, ',')) GROUP BY t1.assign_key",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'products_sample' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "products_sample",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'value_list' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "value_list",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0531,
-      "pattern_signature": "SELECT-FROM-JOIN-GROUP",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "SELECT"
-      ],
-      "tables": [
-        "products_sample",
-        "value_list"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
     "instance_id": "PostgreSQL_339",
     "db_id": "card_games",
     "category": "Personalization",
@@ -6878,60 +3095,10 @@
         "message": "Unbalanced parentheses or brackets",
         "taxonomy_category": "syntax",
         "context": "2 unclosed '('"
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'packages' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "packages",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'contents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "contents",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'contents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "contents",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'contents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "contents",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'contents' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "contents",
-        "affected_clauses": [
-          "FROM"
-        ]
       }
     ],
     "tags": [
-      "syntax_unbalanced_tokens",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
+      "syntax_unbalanced_tokens"
     ],
     "query_metadata": {
       "complexity_score": 0.2667,
@@ -6953,239 +3120,6 @@
       "num_subqueries": 3,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_340",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT ProductID, SPLIT_PART(Description, 'x', 1) AS count, SPLIT_PART(Description, 'x', 2) AS type FROM product",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'product' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "product",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "product"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_341",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH duplicates AS (SELECT product FROM promotions GROUP BY product HAVING COUNT(product) > 1) SELECT * FROM promotions INNER JOIN duplicates ON promotions.product = duplicates.product",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'promotions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "promotions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'promotions' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "promotions",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1063,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-GROUP-HAVING",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "JOIN",
-        "JOIN_INNER",
-        "SELECT",
-        "WITH"
-      ],
-      "tables": [
-        "duplicates",
-        "promotions"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_342",
-    "db_id": "european_football_2",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT team, MIN(source) AS source, MAX(destination) AS destination FROM source_destination_flight GROUP BY team",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'source_destination_flight' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "source_destination_flight",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0229,
-      "pattern_signature": "SELECT-FROM-GROUP",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "SELECT"
-      ],
-      "tables": [
-        "source_destination_flight"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_346",
-    "db_id": "card_games",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE HierarchyCTE(entityid, parentid, emission, total_emission, percentage, level) AS (\n    SELECT entityid, parentid, emission, emission AS total_emission, pctcontribution, 0\n    FROM tree_table\n    WHERE NOT entityid IN (SELECT DISTINCT parentid FROM tree_table WHERE NOT parentid IS NULL)\n    UNION ALL\n    SELECT h.entityid, h.parentid, h.emission, h.emission + cte.total_emission * (CAST(cte.pctcontribution AS DOUBLE PRECISION) / NULLIF(100, 0)) AS total_emission, h.pctcontribution, ",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'tree_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "tree_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'tree_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "tree_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'tree_table' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "tree_table",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2323,
-      "pattern_signature": "WITH-CTE-SELECT-DISTINCT-FROM-JOIN-WHERE-GROUP-UNION-ORDER-SUBQUERY",
-      "clauses_present": [
-        "CTE",
-        "DISTINCT",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "hierarchycte",
-        "tree_table"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 2,
-      "num_ctes": 1,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_347",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 5,
-    "sql": "SELECT * FROM table1",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'table1' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "table1",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "table1"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
     }
   },
   {
@@ -7219,188 +3153,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_350",
-    "db_id": "debit_card_specializing",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT COUNT(*) AS count FROM duration AS d WHERE (TIMESTAMP '2011-12-19 12:00:00' >= d.start AND TIMESTAMP '2011-12-19 12:00:00' < d.\"end\") OR (TIMESTAMP '2011-12-19 15:00:00' > d.start AND TIMESTAMP '2011-12-19 15:00:00' <= d.\"end\") OR (d.start BETWEEN TIMESTAMP '2011-12-19 12:00:00' AND TIMESTAMP '2011-12-19 15:00:00' AND d.\"end\" BETWEEN TIMESTAMP '2011-12-19 12:00:00' AND TIMESTAMP '2011-12-19 15:00:00');",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'duration' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "duration",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.076,
-      "pattern_signature": "SELECT-FROM-WHERE",
-      "clauses_present": [
-        "FROM",
-        "SELECT",
-        "WHERE"
-      ],
-      "tables": [
-        "duration"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_351",
-    "db_id": "financial",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT ct.c_id, bt.start_time::date AS date, trip_counts.trip_count, SUM(CASE WHEN tc.duration = 'Single' AND trip_counts.trip_count = 1 THEN tc.cost WHEN tc.duration = 'Single' AND trip_counts.trip_count = 2 THEN tc.cost * 2 ELSE 0 END) + SUM(CASE WHEN tc.duration = 'Day' AND trip_counts.trip_count >= 3 THEN tc.cost ELSE 0 END) AS total_cost FROM customertrip ct JOIN bustrip bt ON ct.b_id = bt.b_id JOIN ticketcosts tc ON tc.duration IN ('Single', 'Day') JOIN (SELECT b_id, start_time::date AS tr",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'customertrip' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "customertrip",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'bustrip' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "bustrip",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'ticketcosts' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "ticketcosts",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'bustrip' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "bustrip",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.249,
-      "pattern_signature": "SELECT-FROM-JOIN-GROUP-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "SELECT",
-        "SUBQUERY"
-      ],
-      "tables": [
-        "bustrip",
-        "customertrip",
-        "ticketcosts"
-      ],
-      "num_joins": 3,
-      "num_subqueries": 1,
-      "num_ctes": 0,
-      "num_aggregations": 3
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_352",
-    "db_id": "thrombosis_prediction",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT CONCAT(EXTRACT(HOUR FROM description), ' hours, ', EXTRACT(MINUTE FROM description), ' minutes, ', EXTRACT(SECOND FROM description), ' seconds') FROM backup_colour",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'backup_colour' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "backup_colour",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "backup_colour"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_354",
-    "db_id": "student_club",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "ALTER TABLE \"member_privileges\" ADD CONSTRAINT \"member_fk\" FOREIGN KEY REFERENCES \"member\"(\"member_id\");",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'member_privileges' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "member_privileges",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0208,
-      "pattern_signature": "UNKNOWN",
-      "clauses_present": [],
-      "tables": [
-        "member",
-        "member_privileges"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_358",
     "db_id": "student_club",
     "category": "Personalization",
@@ -7410,7 +3162,7 @@
     "errors": [
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'link_to_event' is ambiguous \u2014 exists in tables: attendance, budget",
+        "message": "Column 'link_to_event' is ambiguous \u2014 exists in tables: budget, attendance",
         "taxonomy_category": "semantic",
         "context": "link_to_event",
         "affected_clauses": [
@@ -7521,7 +3273,7 @@
     "errors": [
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'molecule_id' is ambiguous \u2014 exists in tables: molecule, atom, bond",
+        "message": "Column 'molecule_id' is ambiguous \u2014 exists in tables: atom, bond, molecule",
         "taxonomy_category": "semantic",
         "context": "molecule_id",
         "affected_clauses": [
@@ -8266,214 +4018,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_433",
-    "db_id": "european_football_2",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT M.\"id\", MAX(M.\"date\"), M.\"overall_rating\" FROM player_rate AS M GROUP BY M.\"id\", MAX(M.\"date\"), M.\"overall_rating\"",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'player_rate' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "player_rate",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0229,
-      "pattern_signature": "SELECT-FROM-GROUP",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "SELECT"
-      ],
-      "tables": [
-        "player_rate"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_434",
-    "db_id": "student_club",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "SELECT guid FROM login WHERE (login, name) IN (SELECT login, name FROM login GROUP BY login, name HAVING COUNT(*) > 1) AND NOT guid IN (SELECT room_guid FROM groups)",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'login' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "login",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'login' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "login",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'groups' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "groups",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1646,
-      "pattern_signature": "SELECT-FROM-WHERE-GROUP-HAVING-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "SELECT",
-        "SUBQUERY",
-        "WHERE"
-      ],
-      "tables": [
-        "groups",
-        "login"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 2,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_435",
-    "db_id": "california_schools",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "select \"element\", \"record\"\n    from \"frpm_record\"\n    union all\n\n    select\n        substring(\"element\", 1, position('_' in \"element\") - 1) ||'_rate' as element,\n        max(case when substring(\"element\", -1) = '2' then \"record\" end) /\n        max(case when substring(\"element\", -1) = '1' then \"record\" end) as \"record\"\n    from \"frpm_record\"\n    group by substring(\"element\", 1, position('_' in \"element\") - 1)",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'frpm_record' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "frpm_record",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'frpm_record' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "frpm_record",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0229,
-      "pattern_signature": "SELECT-FROM-GROUP-UNION",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "SELECT",
-        "UNION"
-      ],
-      "tables": [
-        "frpm_record"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 2
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_436",
-    "db_id": "student_club",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH member_data AS (\n    SELECT\n        member_id,\n        member_name,\n        ROW_NUMBER() OVER (PARTITION BY member_id ORDER BY member_name) AS rn\n    FROM \"member_trunc\"\n),\ntokenized_members AS (\n    SELECT\n        a.\"link_to_event\",\n        generate_series(1, length(a.\"link_to_member\") - length(replace(a.\"link_to_member\", '|', '')) + 1) AS position,\n        split_part(a.\"link_to_member\", '|', generate_series(1, length(a.\"link_to_member\") - length(replace(a.\"link_to_member\", '|', '')) + 1))",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'member_trunc' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "member_trunc",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'attendance_trunc' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "attendance_trunc",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1615,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-HAVING-WINDOW-ORDER",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "HAVING",
-        "JOIN",
-        "ORDER",
-        "SELECT",
-        "WHERE",
-        "WINDOW",
-        "WITH"
-      ],
-      "tables": [
-        "attendance_trunc",
-        "member_data",
-        "member_names",
-        "member_trunc",
-        "tokenized_members"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 3,
-      "num_aggregations": 2
-    }
-  },
-  {
     "instance_id": "PostgreSQL_437",
     "db_id": "toxicology",
     "category": "Query",
@@ -8481,15 +4025,6 @@
     "sql": "SELECT a.atom_id, COUNT(c.atom_id2) as connection_count FROM atom a LEFT JOIN connected c ON a.atom_id = c.atom_id WHERE a.atom_id IN (SELECT atom_id FROM test WHERE atom_id LIKE 'TR%') GROUP BY a.atom_id",
     "valid": false,
     "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'test' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "test",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
       {
         "tag": "schema_ambiguous_col",
         "message": "Column 'atom_id' is ambiguous \u2014 exists in tables: atom, connected",
@@ -8510,7 +4045,6 @@
       }
     ],
     "tags": [
-      "schema_hallucination_table",
       "schema_ambiguous_col",
       "schema_ambiguous_col"
     ],
@@ -8534,167 +4068,6 @@
       "num_subqueries": 1,
       "num_ctes": 0,
       "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_438",
-    "db_id": "toxicology",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT EXTRACT(YEAR FROM bl.transact_dt_tm) as year, bl.bond_type, COUNT(*) as bond_count FROM bond_list bl RIGHT JOIN bond_ref br ON bl.bond_type = br.bond_type GROUP BY EXTRACT(YEAR FROM bl.transact_dt_tm), bl.bond_type ORDER BY year, br.bond_seq",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'bond_list' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "bond_list",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'bond_ref' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "bond_ref",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0531,
-      "pattern_signature": "SELECT-FROM-JOIN-GROUP-ORDER",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "ORDER",
-        "SELECT"
-      ],
-      "tables": [
-        "bond_list",
-        "bond_ref"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_440",
-    "db_id": "toxicology",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";UPDATE record SET r1 = uuid_generate_v4(), r2 = uuid_generate_v4();",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'record' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "record",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "UPDATE",
-      "clauses_present": [
-        "UPDATE"
-      ],
-      "tables": [
-        "record"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_441",
-    "db_id": "student_club",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "CREATE EXTENSION IF NOT EXISTS pgcrypto;\nSELECT digest(product_id::bytea, 'sha1') AS hash_value, length(digest(product_id::bytea, 'sha1')) AS hash_length\nFROM products;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'products' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "products",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "products"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_443",
-    "db_id": "student_club",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "CREATE EXTENSION IF NOT EXISTS pgcrypto;\nSELECT digest(product_id::bytea, 'sha1') AS hash_value, length(digest(product_id::bytea, 'sha1')) AS hash_length\nFROM products;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'products' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "products",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "products"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
     }
   },
   {
@@ -8812,7 +4185,7 @@
     "errors": [
       {
         "tag": "schema_ambiguous_col",
-        "message": "Column 'ID' is ambiguous \u2014 exists in tables: examination, patient",
+        "message": "Column 'ID' is ambiguous \u2014 exists in tables: patient, examination",
         "taxonomy_category": "semantic",
         "context": "ID",
         "affected_clauses": [
@@ -9139,111 +4512,6 @@
     }
   },
   {
-    "instance_id": "PostgreSQL_513",
-    "db_id": "financial",
-    "category": "Personalization",
-    "sql_index": 1,
-    "sql": "SELECT info FROM _json_update_result;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table '_json_update_result' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "_json_update_result",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "SELECT-FROM",
-      "clauses_present": [
-        "FROM",
-        "SELECT"
-      ],
-      "tables": [
-        "_json_update_result"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_514",
-    "db_id": "student_club",
-    "category": "Management",
-    "sql_index": 0,
-    "sql": "DROP TABLE IF EXISTS \"EventCategories\";",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'EventCategories' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "EventCategories",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "UNKNOWN",
-      "clauses_present": [],
-      "tables": [
-        "eventcategories"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_514",
-    "db_id": "student_club",
-    "category": "Management",
-    "sql_index": 2,
-    "sql": "DROP TABLE IF EXISTS \"BusinessCategories\";",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'BusinessCategories' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "BusinessCategories",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "UNKNOWN",
-      "clauses_present": [],
-      "tables": [
-        "businesscategories"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
     "instance_id": "PostgreSQL_516",
     "db_id": "thrombosis_prediction",
     "category": "Personalization",
@@ -9277,56 +4545,6 @@
       ],
       "tables": [
         "patient"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_518",
-    "db_id": "student_club",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT e.\"first_name\" || ' ' || e.\"last_name\" AS email_full_name, e.email, p.position FROM member_email AS e INNER JOIN member_position AS p ON email_full_name = p.full_name",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'member_email' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "member_email",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'member_position' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "member_position",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0469,
-      "pattern_signature": "SELECT-FROM-JOIN-JOIN_INNER",
-      "clauses_present": [
-        "FROM",
-        "JOIN",
-        "JOIN_INNER",
-        "SELECT"
-      ],
-      "tables": [
-        "member_email",
-        "member_position"
       ],
       "num_joins": 1,
       "num_subqueries": 0,
@@ -9372,288 +4590,6 @@
       "num_subqueries": 2,
       "num_ctes": 2,
       "num_aggregations": 4
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_522",
-    "db_id": "formula_1",
-    "category": "Management",
-    "sql_index": 1,
-    "sql": "INSERT INTO races (raceid, year, round, circuitid, name, date, time, url)\nVALUES (-1, 2009, 1, 10, 'New Test Race', '2009-07-15', '12:00:00', 'https://example.com')\nRETURNIG raceid, year, round, circuitid, name, date, time, url;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "syntax_invalid_token",
-        "message": "Invalid expression / Unexpected token. Line 3, Col: 15.\n  VALUES (-1, 2009, 1, 10, 'New Test Race', '2009-07-15', '12:00:00', 'https://example.com')\nRETURNIG \u001b[4mraceid\u001b[0m, year, round, circuitid, name, date, time, url;",
-        "taxonomy_category": "syntax"
-      }
-    ],
-    "tags": [
-      "syntax_invalid_token"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.0104,
-      "pattern_signature": "VALUES-INSERT",
-      "clauses_present": [
-        "INSERT",
-        "VALUES"
-      ],
-      "tables": [
-        "races"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 0,
-      "num_ctes": 0,
-      "num_aggregations": 0
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_524",
-    "db_id": "financial",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH\n        spell_starts AS (\n            SELECT start_date, end_date\n            FROM blackout_periods s1\n            WHERE NOT EXISTS (\n                SELECT 1\n                FROM blackout_periods s2\n                WHERE s2.start_date < s1.start_date\n                AND s1.start_date <= s2.end_date\n            )\n        ),\n        spell_ends AS (\n            SELECT start_date, end_date\n            FROM blackout_periods t1\n            WHERE NOT EXISTS (\n                SELECT 1\n            ",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'blackout_periods' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "blackout_periods",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'blackout_periods' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "blackout_periods",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'blackout_periods' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "blackout_periods",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'blackout_periods' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "blackout_periods",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1594,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-WHERE-GROUP",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "GROUP",
-        "JOIN",
-        "JOIN_INNER",
-        "SELECT",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "blackout_periods",
-        "spell_ends",
-        "spell_starts"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 2,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_526",
-    "db_id": "formula_1",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "SELECT DriverId, MIN(StartDate) AS StartDate, MAX(EndDate) AS EndDate\nFROM (SELECT *,\nSUM(CASE WHEN a.EndDate = a.StartDate THEN 0 ELSE 1 END) OVER (ORDER BY DriverId, StartDate) sm\nFROM (SELECT DriverId, StartDate, EndDate,\nLAG(EndDate, 1, NULL) OVER (PARTITION BY DriverId ORDER BY DriverId, EndDate) prev_EndDate\nFROM driverContracts) a\n) b\nGROUP BY DriverId, sm;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'driverContracts' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "driverContracts",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1938,
-      "pattern_signature": "SELECT-FROM-GROUP-WINDOW-ORDER-SUBQUERY",
-      "clauses_present": [
-        "FROM",
-        "GROUP",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "WINDOW"
-      ],
-      "tables": [
-        "drivercontracts"
-      ],
-      "num_joins": 0,
-      "num_subqueries": 2,
-      "num_ctes": 0,
-      "num_aggregations": 4
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_527",
-    "db_id": "thrombosis_prediction",
-    "category": "Query",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE ExpCTE AS (\nSELECT\nDENSE_RANK() OVER (ORDER BY exp_id) AS ExpRN\n, exp_id\n, mid\n, qty\nFROM\nExperiment WHERE mid = 2\n)\n, CTE AS\n(\nSELECT\ne.exp_id\n, e.mid\n, e.qty\n, i.qty - e.qty AS QtyAvailable\n, e.ExpRN\nFROM\nExpCTE e\nINNER JOIN\nInventory i ON i.mid = e.mid\nWHERE\ne.exp_id IN (SELECT e_sub.exp_id\nFROM Experiment e_sub\nWHERE NOT EXISTS (SELECT 1 FROM Inventory i_sub\nWHERE i_sub.mid = e_sub.mid AND i_sub.qty < e_sub.qty)\nORDER BY e_sub.exp_id\nLIMIT 1)\nAND e.mid = 2\nUNION ALL\nSELECT\ne.e",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Experiment' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Experiment",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Inventory' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Inventory",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Experiment' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Experiment",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'Inventory' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "Inventory",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.2927,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-WHERE-WINDOW-UNION-ORDER-LIMIT-SUBQUERY",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "JOIN_INNER",
-        "LIMIT",
-        "ORDER",
-        "SELECT",
-        "SUBQUERY",
-        "UNION",
-        "WHERE",
-        "WINDOW",
-        "WITH"
-      ],
-      "tables": [
-        "cte",
-        "expcte",
-        "experiment",
-        "inventory"
-      ],
-      "num_joins": 2,
-      "num_subqueries": 1,
-      "num_ctes": 2,
-      "num_aggregations": 1
-    }
-  },
-  {
-    "instance_id": "PostgreSQL_529",
-    "db_id": "thrombosis_prediction",
-    "category": "Personalization",
-    "sql_index": 0,
-    "sql": "WITH RECURSIVE cte AS (\nSELECT ID, ParentID\nFROM LaboratoryLink\nWHERE ID IN (657266, 115562)\nUNION ALL\nSELECT t.ID, t.ParentID\nFROM LaboratoryLink t\nJOIN cte c ON t.ID = c.ParentID\nWHERE t.ParentID IS NOT NULL\n)\nSELECT *\nFROM cte;",
-    "valid": false,
-    "errors": [
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'LaboratoryLink' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "LaboratoryLink",
-        "affected_clauses": [
-          "FROM"
-        ]
-      },
-      {
-        "tag": "schema_hallucination_table",
-        "message": "Table 'LaboratoryLink' does not exist in schema",
-        "taxonomy_category": "semantic",
-        "context": "LaboratoryLink",
-        "affected_clauses": [
-          "FROM"
-        ]
-      }
-    ],
-    "tags": [
-      "schema_hallucination_table",
-      "schema_hallucination_table"
-    ],
-    "query_metadata": {
-      "complexity_score": 0.1073,
-      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-UNION",
-      "clauses_present": [
-        "CTE",
-        "FROM",
-        "JOIN",
-        "SELECT",
-        "UNION",
-        "WHERE",
-        "WITH"
-      ],
-      "tables": [
-        "cte",
-        "laboratorylink"
-      ],
-      "num_joins": 1,
-      "num_subqueries": 0,
-      "num_ctes": 1,
-      "num_aggregations": 0
     }
   }
 ]

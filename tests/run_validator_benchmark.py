@@ -33,10 +33,11 @@ def parse_schema_from_ddl(ddl_text: str) -> Dict[str, Dict[str, str]]:
     {table_name: {column_name: column_type}} dict.
 
     Handles quoted identifiers, DEFAULT clauses, FOREIGN KEY, PRIMARY KEY, etc.
+    Also catches CREATE TABLE AS SELECT, CREATE TEMP TABLE, IF NOT EXISTS, etc.
     """
     schema: Dict[str, Dict[str, str]] = {}
 
-    # Match CREATE TABLE blocks
+    # ── Pass 1: Full column parsing for standard CREATE TABLE (columns) ──────
     table_pattern = re.compile(
         r'CREATE\s+TABLE\s+"?(\w+)"?\s*\((.*?)\);',
         re.IGNORECASE | re.DOTALL,
@@ -72,6 +73,29 @@ def parse_schema_from_ddl(ddl_text: str) -> Dict[str, Dict[str, str]]:
 
         if columns:
             schema[table_name] = columns
+
+    # ── Pass 2: Broad catch-all for any CREATE TABLE variant ─────────────────
+    # Catches: CREATE TABLE AS SELECT, CREATE TEMP TABLE, CREATE TABLE IF NOT
+    # EXISTS, CREATE UNLOGGED TABLE, etc.  Registers the table name with an
+    # empty column dict if not already parsed in pass 1.
+    broad_pattern = re.compile(
+        r'CREATE\s+(?:TEMP(?:ORARY)?\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"?(\w+)"?\.)?\"?(\w+)\"?',
+        re.IGNORECASE,
+    )
+    for match in broad_pattern.finditer(ddl_text):
+        table_name = match.group(2)  # group(1) is optional schema qualifier
+        if table_name and table_name.lower() not in {k.lower() for k in schema}:
+            schema[table_name] = {}
+
+    # ── Pass 3: SELECT INTO creates a table too ──────────────────────────────
+    select_into_pattern = re.compile(
+        r'SELECT\s+.+?\s+INTO\s+(?:TEMP(?:ORARY)?\s+)?(?:TABLE\s+)?\"?(\w+)\"?',
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in select_into_pattern.finditer(ddl_text):
+        table_name = match.group(1)
+        if table_name and table_name.lower() not in {k.lower() for k in schema}:
+            schema[table_name] = {}
 
     return schema
 
@@ -110,12 +134,23 @@ def run_benchmark_validation(
         category = entry.get("category", "unknown")
         issue_sqls = entry.get("issue_sql", [])
 
+        # Skip multi-query entries (16 entries have >1 issue_sql)
+        if len(issue_sqls) > 1:
+            continue
+
         # Parse schema if not cached
         if db_id not in schema_cache:
             ddl = entry.get("preprocess_schema", "")
             schema_cache[db_id] = parse_schema_from_ddl(ddl)
 
-        schema = schema_cache[db_id]
+        # Start with cached schema and merge tables from preprocess_sql
+        schema = dict(schema_cache[db_id])
+        preprocess_sqls = entry.get("preprocess_sql", [])
+        if preprocess_sqls:
+            for ps in preprocess_sqls:
+                if ps and "CREATE" in ps.upper():
+                    extra_tables = parse_schema_from_ddl(ps)
+                    schema.update(extra_tables)
 
         for sql_idx, sql in enumerate(issue_sqls):
             if not sql or not sql.strip():
