@@ -2,10 +2,13 @@
 
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
+from openai import AsyncOpenAI
 from pydantic_ai import Agent
 from pydantic_ai.models import Model
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from .logger_config import get_logger
 
@@ -17,6 +20,7 @@ class LLMClient:
     Supports:
     - Google Gemini 3 Preview  (provider="google")
     - Mistral Large Latest (provider="mistral")
+    - NVIDIA (provider="nvidia")
 
     No key rotation — one API key per provider, retries handled by pydantic-ai.
     """
@@ -37,7 +41,8 @@ class LLMClient:
         self._configure_env()
 
         # Create a simple text agent with no tools
-        self.agent: Agent[None, str] = Agent(self.model_id)
+        model: Union[str, OpenAIChatModel] = self._build_model()
+        self.agent: Agent[None, str] = Agent(model)
 
         # Statistics
         self.total_requests = 0
@@ -47,6 +52,24 @@ class LLMClient:
         self.logger.info(
             f"Initialized LLMClient: {model_config['display_name']} ({self.model_id})"
         )
+
+    def _build_model(self) -> Union[str, OpenAIChatModel]:
+        """Build the pydantic-ai model. NVIDIA requires a custom OpenAIChatModel."""
+        if self.provider == "nvidia":
+            nvidia_api_key = os.environ.get("NVIDIA_API_KEY", "")
+            if not nvidia_api_key:
+                raise ValueError(
+                    "NVIDIA_API_KEY is not set. Please add it to your .env file."
+                )
+            nvidia_client = AsyncOpenAI(
+                base_url="https://integrate.api.nvidia.com/v1",
+                api_key=nvidia_api_key,
+            )
+            return OpenAIChatModel(
+                self.model_id,
+                provider=OpenAIProvider(openai_client=nvidia_client),
+            )
+        return self.model_id
 
     def _configure_env(self) -> None:
         """Ensure the right env var is set for the pydantic-ai provider."""
@@ -64,10 +87,14 @@ class LLMClient:
                 os.environ.setdefault("GEMINI_API_KEY", key)
         elif self.provider == "mistral":
             # pydantic-ai mistral provider reads MISTRAL_API_KEY
-            # .env.example has a typo (MISTAL_API_KEY) — support both
             key = os.getenv("MISTRAL_API_KEY") or os.getenv("MISTAL_API_KEY")
             if key:
                 os.environ["MISTRAL_API_KEY"] = key
+        elif self.provider == "nvidia":
+            # pydantic-ai nvidia provider reads NVIDIA_API_KEY
+            key = os.getenv("NVIDIA_API_KEY")
+            if key:
+                os.environ["NVIDIA_API_KEY"] = key
 
     def call_api(self, prompt: str, max_retries: int = 3) -> str:
         """
@@ -143,7 +170,7 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     setup_logger(timestamp)
 
-    for provider in ["google", "mistral"]:
+    for provider in ["google", "mistral", "nvidia"]:
         print(f"\nTesting provider: {provider}")
         try:
             config = get_model_config(provider)

@@ -62,10 +62,10 @@ SUPPORTED_MODELS = {
 
 def _build_nvidia_model() -> OpenAIChatModel:
     """Build an OpenAIChatModel pointed at the NVIDIA NIM API."""
-    nvidia_api_key = os.environ.get("NVIDEA_API_KEY", "")
+    nvidia_api_key = os.environ.get("NVIDIA_API_KEY", "")
     if not nvidia_api_key:
         raise ValueError(
-            "NVIDEA_API_KEY is not set in the environment. "
+            "NVIDIA_API_KEY is not set in the environment. "
             "Please add it to your .env file."
         )
     nvidia_client = AsyncOpenAI(

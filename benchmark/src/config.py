@@ -26,6 +26,10 @@ PROVIDERS = {
         "model_id": "mistral:codestral-latest",
         "display_name": "Codestral Latest",
     },
+    "nvidia": {
+        "model_id": "deepseek-ai/deepseek-v3.2",
+        "display_name": "DeepSeek 3.2",
+    },
     "sequel2sql": {
         "model_id": "sequel2sql:pipeline",
         "display_name": "Sequel2SQL Pipeline",
@@ -71,6 +75,7 @@ def load_api_key(provider: str) -> str:
         "google": "GOOGLE_API_KEY",
         "mistral": "MISTRAL_API_KEY",
         "codestral": "MISTRAL_API_KEY",
+        "nvidia": "NVIDIA_API_KEY",
     }
 
     env_var = env_var_map.get(provider)
