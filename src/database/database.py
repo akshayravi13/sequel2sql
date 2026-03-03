@@ -155,10 +155,39 @@ class Database:
         Raises:
             InvalidQueryError: If query is a DDL statement
         """
-        _DDL_KEYWORDS = {"CREATE", "DROP", "ALTER", "TRUNCATE", "RENAME", "COMMENT"}
-        first_token = sql_query.strip().split()[0].upper() if sql_query.strip() else ""
-        if first_token in _DDL_KEYWORDS:
-            raise InvalidQueryError(f"DDL statements ({first_token}) are not allowed")
+        _ALLOWED_FIRST_TOKENS = {"SELECT", "WITH", "EXPLAIN"}
+        _WRITE_KEYWORDS = {
+            "INSERT", "UPDATE", "DELETE", "MERGE", "UPSERT",
+            "CREATE", "DROP", "ALTER", "TRUNCATE", "RENAME",
+            "GRANT", "REVOKE", "VACUUM", "REINDEX", "CLUSTER",
+            "COPY", "CALL", "DO",
+        }
+
+        # Strip leading comments (-- and /* */) and whitespace
+        import re
+        cleaned = re.sub(r"--[^\n]*", "", sql_query)
+        cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.DOTALL)
+        cleaned = cleaned.strip()
+
+        tokens = cleaned.upper().split()
+        first_token = tokens[0] if tokens else ""
+
+        if first_token not in _ALLOWED_FIRST_TOKENS:
+            raise InvalidQueryError(
+                f"Only SELECT / WITH / EXPLAIN queries are allowed (got {first_token})"
+            )
+
+        # Block WITH ... INSERT / UPDATE / DELETE (CTE + DML)
+        # Use word-boundary matching to avoid false positives on column names
+        # or string literals (e.g. SELECT comment FROM ..., WHERE x = 'UPDATE')
+        # Strip string literals before checking
+        no_strings = re.sub(r"'[^']*'", "''", cleaned)
+        upper_sql = no_strings.upper()
+        for kw in _WRITE_KEYWORDS:
+            if re.search(r"\b" + kw + r"\b", upper_sql):
+                raise InvalidQueryError(
+                    f"Write operation '{kw}' detected — only read-only queries are allowed"
+                )
 
         rows = []
         error = None
