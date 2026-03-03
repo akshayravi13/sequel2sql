@@ -2,21 +2,21 @@
 """
 Generic skills for SQL error taxonomy retrieval and feedback-loop updates.
 
-Skill files live in src/error-taxonomy/{category}.md, where {category}
+Skill files live in src/error_taxonomy/{category}.md, where {category}
 is the taxonomy_category value from a ValidationError (e.g. "join_related",
 "syntax", "aggregation", "semantic").
 
 Skill file names match taxonomy categories 1-to-1, so adding a new category
 only requires:
   1. Adding the new tags to ErrorTag in ast_parsers/tags.py
-  2. Creating src/error-taxonomy/{new_category}.md
+  2. Creating src/error_taxonomy/{new_category}.md
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-SKILLS_DIR = Path(__file__).parent.parent / "error-taxonomy"
+SKILLS_DIR = Path(__file__).parent
 
 
 def get_error_taxonomy_skill(error_category: str) -> str:

@@ -28,7 +28,7 @@ def get_db_skill_instructions(db_identifier: str) -> str:
 
 	Replaces the previous pattern of calling skills_toolset.get_instructions()
 	(which listed ALL 11 skills) and then appending get_db_skill_hint().
-	This version emits only the error-taxonomy skill and the DB-specific
+	This version emits only the error_taxonomy skill and the DB-specific
 	semantic model, saving ~350-400 tokens of irrelevant context per run.
 	"""
 	normalized = db_identifier.replace("_", "-").lower()

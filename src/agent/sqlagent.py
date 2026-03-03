@@ -34,7 +34,7 @@ from src.query_intent_vectordb.search_similar_query import (  # noqa: E402
     FewShotExample,
     find_similar_examples,
 )
-from src.skills.generic_skills import (  # noqa: E402
+from src.error_taxonomy.generic_skills import (  # noqa: E402
     get_error_taxonomy_skill as _get_taxonomy_skill,
 )
 
@@ -234,7 +234,7 @@ syntax_fixer_agent = Agent(
 
 
 # =============================================================================
-# Tool Definitions (kept for future use as agent tools)
+# Tool Definitions — registered on benchmark and/or webui agents
 # =============================================================================
 
 
@@ -252,57 +252,31 @@ def execute_sql_query(ctx: RunContext[AgentDeps], sql: str) -> DBQueryResponse:
     return _execute_sql(ctx, sql)
 
 
-# @agent.tool
-# def validate_query(
-#     ctx: RunContext[AgentDeps], input: ValidateQueryToolInput
-# ) -> ValidationResult:
-#     """
-#     Validate SQL query syntax and schema against the connected live database.
-# 
-#     Use this tool to:
-#     - Check if a SQL query has valid PostgreSQL syntax
-#     - Detect schema errors like non-existent tables/columns
-#     - Get metadata about query structure (clauses, complexity, tables referenced)
-# 
-#     Reports ALL errors simultaneously: syntax errors, hallucinated tables,
-#     hallucinated columns — even when the SQL is too broken to fully parse.
-# 
-#     Returns validation status, all errors found, and structural metadata.
-#     """
-#     return validate_with_db(
-#         input.sql,
-#         ctx.deps.database.engine,
-#         dialect=input.dialect,
-#     )
+def validate_query(
+    ctx: RunContext[AgentDeps], sql: str, dialect: str = "postgres"
+) -> ValidationResult:
+    """
+    Validate SQL query syntax and schema against the connected live database.
 
+    Use this tool to:
+    - Check if a SQL query has valid PostgreSQL syntax
+    - Detect schema errors like non-existent tables/columns
+    - Get metadata about query structure (clauses, complexity, tables referenced)
 
-# @agent.tool_plain
-# def similar_examples_tool(
-#     query: str,
-#     n_results: int = 6,
-# ) -> FewShotExamplesResult:
-#     """
-#         Find similar SQL query examples from the training database
-#         using semantic search.
-#
-#     Use this tool to:
-#     - Find examples of similar queries that were previously corrected
-#     - Get context for how similar errors were fixed
-#     - Retrieve queries with similar intent/structure
-#
-#         Returns structurally diverse few-shot examples with metadata.
-#     """
-#     examples = find_similar_examples(query, n_results=n_results)
-#     return FewShotExamplesResult(
-#         examples=examples,
-#         query_intent=query,
-#     )
+    Reports ALL errors simultaneously: syntax errors, hallucinated tables,
+    hallucinated columns — even when the SQL is too broken to fully parse.
+
+    Returns validation status, all errors found, and structural metadata.
+    """
+    return validate_with_db(
+        sql,
+        ctx.deps.database.engine,
+        dialect=dialect,
+    )
 
 
 # =============================================================================
-# analyze_and_fix_sql — DISABLED on benchmark agent.
-# This heavy orchestration tool is only needed for the webui agent.
-# It is re-registered on webui_agent at the bottom of this file.
+# analyze_and_fix_sql — webui-only orchestration tool (not registered on benchmark).
 # =============================================================================
 def analyze_and_fix_sql(
     ctx: RunContext[AgentDeps],
@@ -343,26 +317,26 @@ def analyze_and_fix_sql(
 
     # Step 1: Validate SQL against the live database.
     # Collects syntax + hallucinated-table + hallucinated-column errors together.
-    # result = validate_with_db(issue_sql, database.engine, dialect=dialect)
+    result = validate_with_db(issue_sql, database.engine, dialect=dialect)
 
     # Step 2: Use table names from the parse result (no re-parse needed)
     if include_all_tables:
         schema_description = database.describe_schema()
         available_tables = database.table_names
-    # elif result.query_metadata and result.query_metadata.tables:
-    #     referenced_tables = result.query_metadata.tables
-    #     # The issue_sql may reference wrong/typo table names (that's the bug
-    #     # we're fixing). Only describe tables that actually exist in the DB;
-    #     # fall back to the full schema when none of the referenced tables are
-    #     # real so the agent can see what IS available.
-    #     real_tables = database.table_names
-    #     existing_referenced = [t for t in referenced_tables if t in real_tables]
-    #     if existing_referenced:
-    #         schema_description = database.describe_schema(existing_referenced)
-    #         available_tables = real_tables  # always show all real tables
-    #     else:
-    #         schema_description = database.describe_schema()
-    #         available_tables = real_tables
+    elif result.query_metadata and result.query_metadata.tables:
+        referenced_tables = result.query_metadata.tables
+        # The issue_sql may reference wrong/typo table names (that's the bug
+        # we're fixing). Only describe tables that actually exist in the DB;
+        # fall back to the full schema when none of the referenced tables are
+        # real so the agent can see what IS available.
+        real_tables = database.table_names
+        existing_referenced = [t for t in referenced_tables if t in real_tables]
+        if existing_referenced:
+            schema_description = database.describe_schema(existing_referenced)
+            available_tables = real_tables  # always show all real tables
+        else:
+            schema_description = database.describe_schema()
+            available_tables = real_tables
     else:
         schema_description = database.describe_schema()
         available_tables = database.table_names
@@ -381,30 +355,28 @@ def analyze_and_fix_sql(
     ]
 
     # Step 4: Format validation errors and look up taxonomy skill guidance
-    # validation_errors_formatted = [
-    #     {
-    #         "tag": err.tag.value,
-    #         "message": err.message,
-    #         "taxonomy_category": err.taxonomy_category,
-    #     }
-    #     for err in result.errors
-    # ]
-    validation_errors_formatted = []
+    validation_errors_formatted = [
+        {
+            "tag": err.tag.value,
+            "message": err.message,
+            "taxonomy_category": err.taxonomy_category,
+        }
+        for err in result.errors
+    ]
 
-    # seen_categories: set[str] = set()
-    # taxonomy_skill_parts: list[str] = []
-    # for err in result.errors:
-    #     cat = err.taxonomy_category
-    #     if cat in seen_categories:
-    #         continue
-    #     seen_categories.add(cat)
-    #     guidance = _get_taxonomy_skill(cat)
-    #     if not guidance.startswith("No skill file"):
-    #         taxonomy_skill_parts.append(guidance)
-    # taxonomy_skill_guidance: Optional[str] = (
-    #     "\n\n---\n\n".join(taxonomy_skill_parts) if taxonomy_skill_parts else None
-    # )
-    taxonomy_skill_guidance: Optional[str] = None
+    seen_categories: set[str] = set()
+    taxonomy_skill_parts: list[str] = []
+    for err in result.errors:
+        cat = err.taxonomy_category
+        if cat in seen_categories:
+            continue
+        seen_categories.add(cat)
+        guidance = _get_taxonomy_skill(cat)
+        if not guidance.startswith("No skill file"):
+            taxonomy_skill_parts.append(guidance)
+    taxonomy_skill_guidance: Optional[str] = (
+        "\n\n---\n\n".join(taxonomy_skill_parts) if taxonomy_skill_parts else None
+    )
 
     db_fixes = find_similar_confirmed_fixes(
         intent=query_intent,
@@ -416,7 +388,7 @@ def analyze_and_fix_sql(
         database_id=db_id,
         available_tables=available_tables,
         schema_description=schema_description,
-        has_errors=True,
+        has_errors=bool(result.errors),
         validation_errors=validation_errors_formatted,
         similar_examples=similar_examples_formatted,
         taxonomy_skill_guidance=taxonomy_skill_guidance,
@@ -426,8 +398,7 @@ def analyze_and_fix_sql(
     )
 
 
-# describe_database_schema — DISABLED on benchmark agent.
-# Schema is pre-processed in benchmark data. Re-registered on webui_agent below.
+# describe_database_schema — webui-only.
 def describe_database_schema(
     ctx: RunContext[AgentDeps],
     table_names: list[str] | None = None,
@@ -453,8 +424,7 @@ def describe_database_schema(
     )
 
 
-# get_error_taxonomy_skill — DISABLED on benchmark agent.
-# Re-registered on webui_agent below.
+# get_error_taxonomy_skill — registered on both agents.
 def get_error_taxonomy_skill(error_category: str) -> str:
     """
     Look up best-practice approaches for fixing a SQL error of
@@ -473,8 +443,7 @@ def get_error_taxonomy_skill(error_category: str) -> str:
 
 
 
-# save_confirmed_fix_tool — DISABLED on benchmark agent.
-# Re-registered on webui_agent below.
+# save_confirmed_fix_tool — webui-only.
 def save_confirmed_fix_tool(input: SaveConfirmedFixInput) -> str:
     """
     Persist a user-confirmed SQL fix to the database-specific knowledge store.
@@ -527,14 +496,18 @@ def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> 
         return "No confirmed fixes found in the knowledge base."
     return json.dumps(fixes)
 
+# --- webui agent tools ---
 webui_agent.tool(name="execute_sql_query", retries=3)(execute_sql_query)
-# webui_agent.tool(name="validate_query")(validate_query)
-# webui_agent.tool_plain(name="find_similar_examples")(similar_examples_tool)
+webui_agent.tool(name="validate_query")(validate_query)
 webui_agent.tool(name="analyze_and_fix_sql")(analyze_and_fix_sql)
 webui_agent.tool(name="describe_database_schema")(describe_database_schema)
 webui_agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
 webui_agent.tool_plain(name="save_confirmed_fix_tool")(save_confirmed_fix_tool)
 webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
+
+# --- benchmark agent tools ---
+agent.tool(name="validate_query")(validate_query)
+agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
 agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
 
 
