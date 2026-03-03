@@ -18,9 +18,9 @@ when you need deeper detail beyond what is in this file.
 
 | Resource | What it contains | How to load |
 |---|---|---|
-| Extended gotchas | Edge cases, NULL handling details, type pitfalls | `read_skill_resource("california-schools-template-semantic-model", "references/gotchas.md")` |
-| Metric definitions | Full formulas for FRPM rate, SAT composite, etc. | `read_skill_resource("california-schools-template-semantic-model", "references/metrics.md")` |
-| Query patterns | Canonical SQL for common questions (top schools, county stats, etc.) | `read_skill_resource("california-schools-template-semantic-model", "references/query_patterns.md")` |
+| Extended gotchas | Edge cases, NULL handling details, type pitfalls | `read_skill_resource("california-schools-semantic-model", "references/gotchas.md")` |
+| Metric definitions | Full formulas for FRPM rate, SAT composite, etc. | `read_skill_resource("california-schools-semantic-model", "references/metrics.md")` |
+| Query patterns | Canonical SQL for common questions (top schools, county stats, etc.) | `read_skill_resource("california-schools-semantic-model", "references/query_patterns.md")` |
 
 **When to load resources:**
 - If you are unsure about a metric formula → load `references/metrics.md`
@@ -65,7 +65,7 @@ when you need deeper detail beyond what is in this file.
 For extended gotchas and edge cases, call:
 ```python
 read_skill_resource(
-	skill_name="california-schools-template-semantic-model",
+	skill_name="california-schools-semantic-model",
 	resource_name="references/gotchas.md"
 )
 ```
@@ -84,7 +84,7 @@ There is no direct join between `frpm` and `satscores`; always go through `schoo
 For canonical query patterns (top schools by SAT score, FRPM rate by county, etc.), call:
 ```python
 read_skill_resource(
-	skill_name="california-schools-template-semantic-model",
+	skill_name="california-schools-semantic-model",
 	resource_name="references/query_patterns.md"
 )
 ```
@@ -94,7 +94,7 @@ read_skill_resource(
 For full metric formulas and calculation details, call:
 ```python
 read_skill_resource(
-	skill_name="california-schools-template-semantic-model",
+	skill_name="california-schools-semantic-model",
 	resource_name="references/metrics.md"
 )
 ```

@@ -15,9 +15,9 @@ metadata:
 
 | Resource | What it contains | How to load |
 |---|---|---|
-| Extended gotchas | API IDs vs primary keys, time-series attribute joins, home/away goal logic | `read_skill_resource("european-football-semantic-model", "references/gotchas.md")` |
-| Metric definitions | Win rates, average goals per match, player ratings, form metrics | `read_skill_resource("european-football-semantic-model", "references/metrics.md")` |
-| Query patterns | Team standings, top-rated players, head-to-head records | `read_skill_resource("european-football-semantic-model", "references/query_patterns.md")` |
+| Extended gotchas | API IDs vs primary keys, time-series attribute joins, home/away goal logic | `read_skill_resource("european-football-2-semantic-model", "references/gotchas.md")` |
+| Metric definitions | Win rates, average goals per match, player ratings, form metrics | `read_skill_resource("european-football-2-semantic-model", "references/metrics.md")` |
+| Query patterns | Team standings, top-rated players, head-to-head records | `read_skill_resource("european-football-2-semantic-model", "references/query_patterns.md")` |
 
 **When to load resources:**
 - If joining teams or players to matches → load `references/gotchas.md` (API ID vs id is critical)
@@ -62,7 +62,7 @@ metadata:
 For extended gotchas and SQL examples, call:
 ```python
 read_skill_resource(
-	skill_name="european-football-semantic-model",
+	skill_name="european-football-2-semantic-model",
 	resource_name="references/gotchas.md"
 )
 ```
@@ -88,7 +88,7 @@ For canonical query patterns (season standings, top scorers, player ratings),
 call:
 ```python
 read_skill_resource(
-	skill_name="european-football-semantic-model",
+	skill_name="european-football-2-semantic-model",
 	resource_name="references/query_patterns.md"
 )
 ```
@@ -98,7 +98,7 @@ read_skill_resource(
 For full metric formulas (goals per game, win rates, player rating trends), call:
 ```python
 read_skill_resource(
-	skill_name="european-football-semantic-model",
+	skill_name="european-football-2-semantic-model",
 	resource_name="references/metrics.md"
 )
 ```
