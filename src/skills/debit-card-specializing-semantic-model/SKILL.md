@@ -15,9 +15,9 @@ metadata:
 
 | Resource | What it contains | How to load |
 |---|---|---|
-| Extended gotchas | YYYYMM date format, Czech product names, country codes, segment values | `read_skill_resource("debit-card-semantic-model", "references/gotchas.md")` |
-| Metric definitions | Spend per customer, monthly consumption, station-level aggregates | `read_skill_resource("debit-card-semantic-model", "references/metrics.md")` |
-| Query patterns | Canonical SQL for customer spend, station queries, product filtering | `read_skill_resource("debit-card-semantic-model", "references/query_patterns.md")` |
+| Extended gotchas | YYYYMM date format, Czech product names, country codes, segment values | `read_skill_resource("debit-card-specializing-semantic-model", "references/gotchas.md")` |
+| Metric definitions | Spend per customer, monthly consumption, station-level aggregates | `read_skill_resource("debit-card-specializing-semantic-model", "references/metrics.md")` |
+| Query patterns | Canonical SQL for customer spend, station queries, product filtering | `read_skill_resource("debit-card-specializing-semantic-model", "references/query_patterns.md")` |
 
 **When to load resources:**
 - If filtering by date or month → load `references/gotchas.md` (date is an integer, not a DATE column)
@@ -60,7 +60,7 @@ metadata:
 For extended gotchas and SQL examples, call:
 ```python
 read_skill_resource(
-	skill_name="debit-card-semantic-model",
+	skill_name="debit-card-specializing-semantic-model",
 	resource_name="references/gotchas.md"
 )
 ```
@@ -83,7 +83,7 @@ For canonical query patterns (spend by segment, monthly trends, station country
 breakdowns), call:
 ```python
 read_skill_resource(
-	skill_name="debit-card-semantic-model",
+	skill_name="debit-card-specializing-semantic-model",
 	resource_name="references/query_patterns.md"
 )
 ```
@@ -94,7 +94,7 @@ For full metric formulas (total spend, monthly consumption, station-level
 aggregates), call:
 ```python
 read_skill_resource(
-	skill_name="debit-card-semantic-model",
+	skill_name="debit-card-specializing-semantic-model",
 	resource_name="references/metrics.md"
 )
 ```

@@ -15,9 +15,9 @@ metadata:
 
 | Resource | What it contains | How to load |
 |---|---|---|
-| Extended gotchas | Time string vs milliseconds, NULL positions, positionText values, standings pitfalls | `read_skill_resource("formula1-semantic-model", "references/gotchas.md")` |
-| Metric definitions | Points totals, win counts, pit stop averages, championship standings | `read_skill_resource("formula1-semantic-model", "references/metrics.md")` |
-| Query patterns | Driver standings, constructor wins, fastest laps, DNF analysis | `read_skill_resource("formula1-semantic-model", "references/query_patterns.md")` |
+| Extended gotchas | Time string vs milliseconds, NULL positions, positionText values, standings pitfalls | `read_skill_resource("formula-1-semantic-model", "references/gotchas.md")` |
+| Metric definitions | Points totals, win counts, pit stop averages, championship standings | `read_skill_resource("formula-1-semantic-model", "references/metrics.md")` |
+| Query patterns | Driver standings, constructor wins, fastest laps, DNF analysis | `read_skill_resource("formula-1-semantic-model", "references/query_patterns.md")` |
 
 **When to load resources:**
 - If the query involves timing or lap times → load `references/gotchas.md` (time columns are strings)
@@ -63,7 +63,7 @@ metadata:
 For extended gotchas and SQL examples, call:
 ```python
 read_skill_resource(
-	skill_name="formula1-semantic-model",
+	skill_name="formula-1-semantic-model",
 	resource_name="references/gotchas.md"
 )
 ```
@@ -87,7 +87,7 @@ races.raceId          ──→  constructorstandings.raceId
 For canonical query patterns (season champions, win counts, fastest laps), call:
 ```python
 read_skill_resource(
-	skill_name="formula1-semantic-model",
+	skill_name="formula-1-semantic-model",
 	resource_name="references/query_patterns.md"
 )
 ```
@@ -98,7 +98,7 @@ For full metric formulas (points per season, pit stop averages, constructor wins
 call:
 ```python
 read_skill_resource(
-	skill_name="formula1-semantic-model",
+	skill_name="formula-1-semantic-model",
 	resource_name="references/metrics.md"
 )
 ```
