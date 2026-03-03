@@ -32,15 +32,15 @@ sys.path.insert(0, str(ROOT / "src"))
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from ast_parsers.validator import validate_with_db, invalidate_schema_cache
 from ast_parsers.result import ValidationResult
+from ast_parsers.validator import invalidate_schema_cache, validate_with_db
 
 # ─── Docker PostgreSQL connection config ─────────────────────────────────────
 # These match benchmark/docker-compose.yml
 PG_USER = "root"
 PG_PASSWORD = "123123"
 PG_HOST = "localhost"  # Docker maps container port to host
-PG_PORT = 5433         # docker-compose maps 5433 -> 5432
+PG_PORT = 5534  # docker-compose maps 5534 -> 5432
 DB_TEMPLATE_SUFFIX = "_template"
 
 # ─── Engine cache ────────────────────────────────────────────────────────────
@@ -216,17 +216,19 @@ def run_benchmark(
                 result = validate_with_db(sql, engine)
             except Exception as exc:
                 exception_count += 1
-                results.append({
-                    "instance_id": instance_id,
-                    "db_id": db_id,
-                    "category": category,
-                    "sql_index": sql_idx,
-                    "sql": sql[:500],
-                    "valid": None,
-                    "exception": str(exc)[:200],
-                    "errors": [],
-                    "tags": [],
-                })
+                results.append(
+                    {
+                        "instance_id": instance_id,
+                        "db_id": db_id,
+                        "category": category,
+                        "sql_index": sql_idx,
+                        "sql": sql[:500],
+                        "valid": None,
+                        "exception": str(exc)[:200],
+                        "errors": [],
+                        "tags": [],
+                    }
+                )
                 continue
 
             if result.valid:
@@ -259,15 +261,15 @@ def run_benchmark(
 
     # ── Summary stats ────────────────────────────────────────────────────────
     total = valid_count + error_count + exception_count
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"VALIDATE_WITH_DB BENCHMARK RESULTS")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Total SQL queries:        {total}")
     print(f"  Valid (no errors):      {valid_count}")
     print(f"  Invalid (has errors):   {error_count}")
     print(f"  Exceptions:             {exception_count}")
     print(f"  Skipped (no DB):        {skip_count}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Error breakdown by tag
     tag_counts: Dict[str, int] = {}
@@ -293,7 +295,7 @@ def run_benchmark(
 
     print(f"\nPer-Database Breakdown:")
     print(f"  {'Database':<35s} {'Valid':>6s} {'Invalid':>8s}")
-    print(f"  {'-'*35} {'-'*6} {'-'*8}")
+    print(f"  {'-' * 35} {'-' * 6} {'-' * 8}")
     for db in sorted(db_error_counts.keys()):
         v, inv = db_error_counts[db]
         print(f"  {db:<35s} {v:>6d} {inv:>8d}")
@@ -311,17 +313,17 @@ def run_benchmark(
 
     print(f"\nPer-Category Breakdown:")
     print(f"  {'Category':<25s} {'Valid':>6s} {'Invalid':>8s}")
-    print(f"  {'-'*25} {'-'*6} {'-'*8}")
+    print(f"  {'-' * 25} {'-' * 6} {'-' * 8}")
     for cat in sorted(cat_counts.keys()):
         v, inv = cat_counts[cat]
         print(f"  {cat:<25s} {v:>6d} {inv:>8d}")
 
     # ── Comparison with static validation ────────────────────────────────────
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"COMPARISON: Static validate() vs validate_with_db()")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"{'Metric':<30s} {'Static':>10s} {'With DB':>10s}")
-    print(f"{'-'*30} {'-'*10} {'-'*10}")
+    print(f"{'-' * 30} {'-' * 10} {'-' * 10}")
 
     # Load static results if they exist
     static_path = output_path.replace("validate_with_db_", "validator_")
@@ -335,7 +337,7 @@ def run_benchmark(
         static_tags = s.get("tag_distribution", {})
         all_tags = sorted(set(list(static_tags.keys()) + list(tag_counts.keys())))
         print(f"\n{'Tag':<45s} {'Static':>8s} {'With DB':>8s} {'Δ':>6s}")
-        print(f"{'-'*45} {'-'*8} {'-'*8} {'-'*6}")
+        print(f"{'-' * 45} {'-' * 8} {'-' * 8} {'-' * 6}")
         for tag in all_tags:
             sc = static_tags.get(tag, 0)
             dc = tag_counts.get(tag, 0)
@@ -343,7 +345,9 @@ def run_benchmark(
             sign = "+" if delta > 0 else ""
             print(f"  {tag:<43s} {sc:>8d} {dc:>8d} {sign}{delta:>5d}")
     else:
-        print(f"  (Static results not found at {static_path} — run run_validator_benchmark.py first)")
+        print(
+            f"  (Static results not found at {static_path} — run run_validator_benchmark.py first)"
+        )
 
     # ── Save full results ────────────────────────────────────────────────────
     output = {
@@ -384,6 +388,8 @@ def run_benchmark(
 
 if __name__ == "__main__":
     data_file = str(ROOT / "benchmark" / "data" / "postgresql_full.jsonl")
-    output_file = str(ROOT / "tests" / "output" / "validate_with_db_benchmark_results.json")
+    output_file = str(
+        ROOT / "tests" / "output" / "validate_with_db_benchmark_results.json"
+    )
 
     run_benchmark(data_file, output_file)

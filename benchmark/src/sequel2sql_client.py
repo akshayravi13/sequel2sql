@@ -27,8 +27,8 @@ from .logger_config import get_logger
 # ---------------------------------------------------------------------------
 # Benchmark agent limits — prevent runaway tool-calling loops
 # ---------------------------------------------------------------------------
-BENCHMARK_REQUEST_LIMIT = 10   # max LLM round-trips per query
-BENCHMARK_TOOL_CALLS_LIMIT = 8  # max successful tool invocations per query
+BENCHMARK_REQUEST_LIMIT = 10  # max LLM round-trips per query
+BENCHMARK_TOOL_CALLS_LIMIT = 15  # max successful tool invocations per query
 
 # I have no idea what any of the below code below means, I did not create this import mess and I am not going to bother trying to fix it.
 
@@ -203,9 +203,7 @@ class Sequel2SQLClient:
                     # Agent exhausted its tool-call / request budget.
                     # This is NOT a transient error — retrying will hit
                     # the same limit. Treat as a hard failure.
-                    self.logger.warning(
-                        f"⚠️  Usage limit exceeded for {db_id}: {e}"
-                    )
+                    self.logger.warning(f"⚠️  Usage limit exceeded for {db_id}: {e}")
                     last_error = e
                     break  # skip retries
 
@@ -218,7 +216,7 @@ class Sequel2SQLClient:
 
                     # Exponential backoff: base 2s, doubles each attempt,
                     # capped at 60s
-                    backoff = min(2 ** attempt, 60)
+                    backoff = min(2**attempt, 60)
 
                     if (
                         "429" in error_str

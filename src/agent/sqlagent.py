@@ -6,16 +6,23 @@ Deterministic orchestration pipeline that validates SQL, fixes syntax
 errors, retrieves few-shot examples, and calls the main agent.
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import List, Optional
 
 import logfire
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
-from src.db_confirmed_fixes.retriever import find_similar_confirmed_fixes, save_confirmed_fix
+from src.db_confirmed_fixes.retriever import (
+    find_similar_confirmed_fixes,
+    save_confirmed_fix,
+)
 
 # Add both project root and src/ to sys.path for imports to work
 project_root = Path(__file__).parent.parent.parent
@@ -30,12 +37,12 @@ from src.agent.prompts.webui_prompt import WEBUI_PROMPT  # noqa: E402
 from src.ast_parsers import ValidationResult, validate_with_db  # noqa: E402
 from src.database import AgentDeps, Database, DBQueryResponse  # noqa: E402
 from src.database import execute_sql as _execute_sql  # noqa: E402
+from src.error_taxonomy.generic_skills import (  # noqa: E402
+    get_error_taxonomy_skill as _get_taxonomy_skill,
+)
 from src.query_intent_vectordb.search_similar_query import (  # noqa: E402
     FewShotExample,
     find_similar_examples,
-)
-from src.error_taxonomy.generic_skills import (  # noqa: E402
-    get_error_taxonomy_skill as _get_taxonomy_skill,
 )
 
 load_dotenv()
@@ -49,8 +56,29 @@ SUPPORTED_MODELS = {
     "mistral": "mistral:mistral-large-latest",
     "google": "google-gla:gemini-3-flash-preview",
     "codestral": "mistral:codestral-latest",
+    "nvidia": "deepseek-ai/deepseek-v3.2",
 }
-DEFAULT_MODEL = "mistral:mistral-large-latest"
+
+
+def _build_nvidia_model() -> OpenAIChatModel:
+    """Build an OpenAIChatModel pointed at the NVIDIA NIM API."""
+    nvidia_api_key = os.environ.get("NVIDEA_API_KEY", "")
+    if not nvidia_api_key:
+        raise ValueError(
+            "NVIDEA_API_KEY is not set in the environment. "
+            "Please add it to your .env file."
+        )
+    nvidia_client = AsyncOpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=nvidia_api_key,
+    )
+    return OpenAIChatModel(
+        "deepseek-ai/deepseek-v3.2",
+        provider=OpenAIProvider(openai_client=nvidia_client),
+    )
+
+
+DEFAULT_MODEL = _build_nvidia_model()
 
 
 # Logfire configuration (make sure to set LOGFIRE_TOKEN in .env for logging to work)
@@ -62,8 +90,8 @@ logfire.instrument_pydantic_ai()
 # =============================================================================
 
 from src.agent.skills_config import (  # noqa: E402
-	get_db_skill_instructions,
-	skills_toolset,
+    get_db_skill_instructions,
+    skills_toolset,
 )
 
 # =============================================================================
@@ -74,7 +102,7 @@ from src.agent.skills_config import (  # noqa: E402
 def get_database_deps(
     database_name: str,
     host: str = "localhost",
-    port: int = 5433,
+    port: int = 5534,
     user: str = "root",
     password: str = "123123",
     max_return_values: int = 200,
@@ -84,7 +112,7 @@ def get_database_deps(
     Args:
             database_name: Name of the PostgreSQL database to connect to
             host: PostgreSQL host (default: localhost)
-            port: PostgreSQL port (default: 5433)
+            port: PostgreSQL port (default: 5534)
             user: PostgreSQL username (default: root)
             password: PostgreSQL password (default: 123123)
             max_return_values: Maximum number of result values to return (default: 200)
@@ -148,8 +176,11 @@ class FewShotExamplesResult(BaseModel):
 
 
 class BenchmarkOutput(BaseModel):
-	"""Structured output for the benchmark agent — one SQL query, no explanation."""
-	sql: str = Field(description="The corrected PostgreSQL query. Raw SQL only — no commentary.")
+    """Structured output for the benchmark agent — one SQL query, no explanation."""
+
+    sql: str = Field(
+        description="The corrected PostgreSQL query. Raw SQL only — no commentary."
+    )
 
 
 class SchemaDescription(BaseModel):
@@ -159,12 +190,13 @@ class SchemaDescription(BaseModel):
     available_tables: list[str]
     schema_description: str
 
+
 class SaveConfirmedFixInput(BaseModel):
     database: str
-    intent: str        # the user's original natural language request
+    intent: str  # the user's original natural language request
     corrected_sql: str
     error_sql: str
-    explanation: str   # what was wrong and what specifically was changed to fix it
+    explanation: str  # what was wrong and what specifically was changed to fix it
 
 
 class SQLAnalysisContext(BaseModel):
@@ -203,19 +235,19 @@ class SQLAnalysisContext(BaseModel):
 
 # Default agent
 agent = Agent(
-	DEFAULT_MODEL,
-	deps_type=AgentDeps,
-	output_type=BenchmarkOutput,
-	system_prompt=BENCHMARK_PROMPT,
-	toolsets=[skills_toolset],
+    DEFAULT_MODEL,
+    deps_type=AgentDeps,
+    output_type=BenchmarkOutput,
+    system_prompt=BENCHMARK_PROMPT,
+    toolsets=[skills_toolset],
 )
 
 # Web UI agent
 webui_agent = Agent(
-	DEFAULT_MODEL,
-	deps_type=AgentDeps,
-	system_prompt=WEBUI_PROMPT,
-	toolsets=[skills_toolset],
+    DEFAULT_MODEL,
+    deps_type=AgentDeps,
+    system_prompt=WEBUI_PROMPT,
+    toolsets=[skills_toolset],
 )
 
 SYNTAX_FIXER_PROMPT = (
@@ -440,9 +472,6 @@ def get_error_taxonomy_skill(error_category: str) -> str:
     return _get_taxonomy_skill(error_category)
 
 
-
-
-
 # save_confirmed_fix_tool — webui-only.
 def save_confirmed_fix_tool(input: SaveConfirmedFixInput) -> str:
     """
@@ -464,7 +493,7 @@ def save_confirmed_fix_tool(input: SaveConfirmedFixInput) -> str:
     `database` comes from ctx.deps.database.database_name.
     """
     import json
-    
+
     result = save_confirmed_fix(
         database=input.database,
         intent=input.intent,
@@ -479,6 +508,7 @@ class FindSimilarConfirmedFixesInput(BaseModel):
     intent: str
     database: str
 
+
 # find_similar_confirmed_fixes_tool — registered on both benchmark and webui agents.
 def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> str:
     """
@@ -487,14 +517,14 @@ def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> 
     It returns empty if the database knowledge store is empty or does not exist yet.
     """
     import json
+
     fixes = find_similar_confirmed_fixes(
-        intent=input.intent,
-        database=input.database,
-        n_results=4
+        intent=input.intent, database=input.database, n_results=4
     )
     if not fixes:
         return "No confirmed fixes found in the knowledge base."
     return json.dumps(fixes)
+
 
 # --- webui agent tools ---
 webui_agent.tool(name="execute_sql_query", retries=3)(execute_sql_query)
@@ -503,12 +533,16 @@ webui_agent.tool(name="analyze_and_fix_sql")(analyze_and_fix_sql)
 webui_agent.tool(name="describe_database_schema")(describe_database_schema)
 webui_agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
 webui_agent.tool_plain(name="save_confirmed_fix_tool")(save_confirmed_fix_tool)
-webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
+webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(
+    find_similar_confirmed_fixes_tool
+)
 
 # --- benchmark agent tools ---
 agent.tool(name="validate_query")(validate_query)
 agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
-agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirmed_fixes_tool)
+agent.tool_plain(name="find_similar_confirmed_fixes_tool")(
+    find_similar_confirmed_fixes_tool
+)
 
 
 # =============================================================================
@@ -518,12 +552,12 @@ agent.tool_plain(name="find_similar_confirmed_fixes_tool")(find_similar_confirme
 
 @agent.instructions
 async def agent_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
-	return get_db_skill_instructions(ctx.deps.database.database_name)
+    return get_db_skill_instructions(ctx.deps.database.database_name)
 
 
 @webui_agent.instructions
 async def webui_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
-	return get_db_skill_instructions(ctx.deps.database.database_name)
+    return get_db_skill_instructions(ctx.deps.database.database_name)
 
 
 # =============================================================================

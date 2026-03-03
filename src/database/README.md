@@ -179,7 +179,7 @@ Custom connection:
 db = Database(
     database_name="my_db",
     host="custom.host.com",
-    port=5433,
+    port=5534,
     user="myuser",
     password="mypass",
 )

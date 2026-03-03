@@ -215,10 +215,6 @@ class InferenceEngine:
                     description=f"Generating SQL Solutions [{model_name}] [green]\u2713{passed}[/green] [red]\u2717{failed}[/red]",
                 )
 
-                # Add a 60-second delay to avoid rate limits, except for the last query
-                if task != tasks[-1]:
-                    time.sleep(60)
-
         # Final checkpoint save
         self.checkpoint_manager.save()
 

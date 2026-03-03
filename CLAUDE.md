@@ -191,8 +191,8 @@ Sequel2SQL uses an **agentic pipeline** combining AST-based validation, semantic
 
 **Database Connection** ([src/agent/sqlagent.py](src/agent/sqlagent.py)):
 - `get_database_deps(database_name, ...)` creates an `AgentDeps` with a `Database` instance
-- Default connection: `localhost:5433`, user `root`, password `123123`
-- `Database.__init__` defaults to port 5432; `get_database_deps` overrides to 5433 for Docker
+- Default connection: `localhost:5534`, user `root`, password `123123`
+- `Database.__init__` defaults to port 5432; `get_database_deps` overrides to 5534 for Docker
 
 **Validation Strategy**:
 - `validate_sql(sql, db_name, dialect)` in [src/ast_parsers/llm_tool.py](src/ast_parsers/llm_tool.py) is the agent-facing interface
