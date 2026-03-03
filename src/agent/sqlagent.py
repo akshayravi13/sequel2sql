@@ -240,6 +240,7 @@ agent = Agent(
     output_type=BenchmarkOutput,
     system_prompt=BENCHMARK_PROMPT,
     toolsets=[skills_toolset],
+    model_settings={"parallel_tool_calls": False},
 )
 
 # Web UI agent

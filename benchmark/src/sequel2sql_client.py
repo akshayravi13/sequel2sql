@@ -28,7 +28,7 @@ from .logger_config import get_logger
 # Benchmark agent limits — prevent runaway tool-calling loops
 # ---------------------------------------------------------------------------
 BENCHMARK_REQUEST_LIMIT = 10  # max LLM round-trips per query
-BENCHMARK_TOOL_CALLS_LIMIT = 15  # max successful tool invocations per query
+BENCHMARK_TOOL_CALLS_LIMIT = 10  # max successful tool invocations per query
 
 # I have no idea what any of the below code below means, I did not create this import mess and I am not going to bother trying to fix it.
 
@@ -197,7 +197,11 @@ class Sequel2SQLClient:
                     self.successful_requests += 1
                     span.set_attribute("attempts", attempt)
                     time.sleep(2)  # respect rate limits
-                    return f"```sql\n{result.output.sql}\n```"
+                    # result.output is a plain string (raw SQL) because the
+                    # benchmark agent uses output_type=str to avoid the anyOf
+                    # grammar schema that NVIDIA NIM / DeepSeek rejects.
+                    sql_text = result.output.strip()
+                    return f"```sql\n{sql_text}\n```"
 
                 except UsageLimitExceeded as e:
                     # Agent exhausted its tool-call / request budget.
