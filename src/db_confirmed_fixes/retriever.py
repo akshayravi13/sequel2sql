@@ -80,6 +80,7 @@ def save_confirmed_fix(
 
     # 1. Deduplication Gate
     # Ask for top 5 most similar items by intent embedding
+    results = None
     try:
         fetch_count = min(5, collection.count())
         if fetch_count > 0:
@@ -88,25 +89,21 @@ def save_confirmed_fix(
                 n_results=fetch_count,
                 include=["documents", "metadatas", "distances"],
             )
-
-        if results and results["documents"] and results["documents"][0]:
-            docs = results["documents"][0]
-            metas = results["metadatas"][0]
-            dists = results["distances"][0]
-            ids = results["ids"][0]
-
-            for doc, meta, dist, doc_id in zip(docs, metas, dists, ids):
-                # distance is typically 1 - cosine_similarity for sentence transformers in chroma
-                # Some versions might return just distance (L2 or cosine).
-                # Assuming cosine distance where similarity = 1 - distance
-                similarity = 1.0 - dist
-                
-                # Deduplicate directly on intent semantic distance >= 0.8
-                if similarity >= 0.8:
-                    return {"status": "duplicate", "matched_id": doc_id}
     except Exception:
-        # Ignore query errors on an empty collection or during deduplication
+        # Ignore query errors on an empty or freshly-created collection
         pass
+
+    if results and results["documents"] and results["documents"][0]:
+        docs = results["documents"][0]
+        metas = results["metadatas"][0]
+        dists = results["distances"][0]
+        ids = results["ids"][0]
+
+        for doc, meta, dist, doc_id in zip(docs, metas, dists, ids):
+            similarity = 1.0 - dist
+            # Deduplicate directly on intent semantic distance >= 0.8
+            if similarity >= 0.8:
+                return {"status": "duplicate", "matched_id": doc_id}
 
     # 2. Save Item
     doc_id = hashlib.sha256(
@@ -188,6 +185,13 @@ def find_similar_confirmed_fixes(
                     "similarity": round(similarity, 4),
                 }
             )
+            # Queue usage_count increment for this candidate
+            current_count = int(meta.get("usage_count", 0))
+            updated_meta = dict(meta)
+            updated_meta["usage_count"] = current_count + 1
+            ids_to_increment.append(doc_id)
+            metadatas_to_update.append(updated_meta)
+
         # Best-effort increment usage_count
         if ids_to_increment:
             try:
