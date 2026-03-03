@@ -41,6 +41,7 @@ from src.prompt_generator import generate_prompts_from_file
 from src.sequel2sql_client import Sequel2SQLClient
 from src.ui import (
     ask_provider,
+    ask_select_only_size,
     ask_single_query_number,
     ask_subset_size,
     confirm_delete,
@@ -262,6 +263,7 @@ def main():
     # ========== Main Menu Loop ==========
     query_limit = args.limit  # From command line
     query_index = None  # For single-query mode (0-based)
+    select_only = False  # For SELECT-only mode
     output_dir = None
     checkpoint_manager = None
     resume_mode = False
@@ -407,6 +409,70 @@ def main():
                 logger.info("Starting new subset run...")
                 break
 
+            elif action == "select_only":
+                # Ask which model to use
+                selected_provider = ask_provider(PROVIDERS)
+                if selected_provider is None:
+                    continue
+                try:
+                    validate_config(selected_provider)
+                    model_config = get_model_config(selected_provider)
+                except SystemExit:
+                    continue
+
+                # Count available SELECT queries so we can validate the limit
+                import json as _json
+
+                with open(data_file, "r") as _f:
+                    _all_data = [_json.loads(line) for line in _f]
+                _select_count = sum(
+                    1
+                    for d in _all_data
+                    if d.get("issue_sql", [""])
+                    and d["issue_sql"][0].strip().upper().startswith("SELECT")
+                )
+
+                query_limit = ask_select_only_size(_select_count)
+                if query_limit is None:
+                    continue
+
+                select_only = True
+
+                timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                logger = setup_logger(timestamp)
+                logger.info("=" * 70)
+                logger.info("SEQUEL2SQL Benchmark Starting - SELECT-ONLY RUN")
+                logger.info("=" * 70)
+
+                total_queries = query_limit
+                logger.info(
+                    f"Running SELECT-ONLY MODE with {total_queries} queries "
+                    f"(from {_select_count} available SELECT queries)"
+                )
+
+                display_config_summary(model_config, total_queries)
+
+                if not confirm_start():
+                    select_only = False
+                    query_limit = None
+                    continue
+
+                output_dir = get_outputs_dir() / f"run_{timestamp}"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Output directory: {output_dir}")
+
+                checkpoint_manager = CheckpointManager(output_dir)
+                checkpoint_manager.set_run_config(
+                    provider=selected_provider,
+                    model_id=model_config["model_id"],
+                    model_name=model_config["display_name"],
+                    pipeline_type="select_only",
+                    query_limit=total_queries,
+                )
+                resume_mode = False
+                logger.info("Starting new SELECT-only run...")
+                break
+
             elif action == "single":
                 # Pick a specific query by 1-based number
                 selected_provider = ask_provider(PROVIDERS)
@@ -548,6 +614,7 @@ def main():
                 schema_field="preprocess_schema",
                 limit=query_limit,
                 query_index=query_index,
+                select_only=select_only,
             )
             logger.info(f"✓ Generated {num_generated} prompts")
             checkpoint_manager.save_checkpoint()

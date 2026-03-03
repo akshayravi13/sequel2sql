@@ -78,7 +78,8 @@ def _build_nvidia_model() -> OpenAIChatModel:
     )
 
 
-DEFAULT_MODEL = _build_nvidia_model()
+# Pick DEFAULT_MODEL value from .env, default to Mistral if not set or invalid
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "mistral").lower()
 
 
 # Logfire configuration (make sure to set LOGFIRE_TOKEN in .env for logging to work)

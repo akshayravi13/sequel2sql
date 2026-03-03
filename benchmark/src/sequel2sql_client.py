@@ -11,6 +11,7 @@ a single ```sql ... ``` block, which the benchmark post-processor can
 extract identically to responses from Google/Mistral.
 """
 
+import concurrent.futures
 import importlib.util
 import sys
 import time
@@ -18,9 +19,9 @@ from pathlib import Path
 from typing import Any, Dict
 
 import logfire
+import psycopg2
 from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.usage import UsageLimits
-from sqlalchemy import text
 
 from .logger_config import get_logger
 
@@ -29,6 +30,11 @@ from .logger_config import get_logger
 # ---------------------------------------------------------------------------
 BENCHMARK_REQUEST_LIMIT = 10  # max LLM round-trips per query
 BENCHMARK_TOOL_CALLS_LIMIT = 10  # max successful tool invocations per query
+
+# Per-query wall-clock timeout for the agent run (seconds).
+# Prevents a single query from hanging the whole benchmark run.
+AGENT_RUN_TIMEOUT = 300  # 5 minutes
+
 
 # I have no idea what any of the below code below means, I did not create this import mess and I am not going to bother trying to fix it.
 
@@ -63,21 +69,45 @@ _sqlagent = sys.modules["_s2s_sqlagent"]
 agent = _sqlagent.agent
 get_database_deps = _sqlagent.get_database_deps
 
+# invalidate_schema_cache is available now because _PROJECT_ROOT is in sys.path
+# from the module loading block above and ast_parsers is already in sys.modules.
+from ast_parsers.validator import invalidate_schema_cache  # noqa: E402
 
-def _execute_raw_statements(engine, statements: list) -> None:
+# psycopg2 connection config — same host/port as get_database_deps
+_PG_HOST = "localhost"
+_PG_PORT = 5534
+_PG_USER = "root"
+_PG_PASSWORD = "123123"
+
+
+def _run_psycopg2_statements(db_id: str, statements: list, logger) -> None:
     """
-    Execute a list of raw SQL statements (including DDL) directly via the
-    SQLAlchemy engine, bypassing the Database.execute_sql DDL guard.
-    Each statement is run in its own autocommit connection so DDL is
-    committed immediately.
+    Execute a list of raw SQL statements via a plain psycopg2 connection.
+
+    Using psycopg2 directly (not SQLAlchemy) keeps this completely isolated
+    from the SQLAlchemy connection pool that Database.__init__ creates during
+    metadata.reflect(). A pooled connection left open in autobegin state would
+    hold a relation-level lock and block any subsequent DELETE/DDL.
+
+    Each statement is committed and the connection is closed before returning,
+    so there are zero open transactions when the agent runs.
     """
-    for stmt in statements:
-        stmt = stmt.strip()
-        if not stmt:
-            continue
-        with engine.connect() as conn:
-            conn.execute(text(stmt))
-            conn.commit()
+    conn = psycopg2.connect(
+        dbname=db_id,
+        user=_PG_USER,
+        password=_PG_PASSWORD,
+        host=_PG_HOST,
+        port=_PG_PORT,
+    )
+    conn.autocommit = True
+    try:
+        with conn.cursor() as cur:
+            for stmt in statements:
+                stmt = stmt.strip()
+                if stmt:
+                    cur.execute(stmt)
+    finally:
+        conn.close()
 
 
 class Sequel2SQLClient:
@@ -162,32 +192,51 @@ class Sequel2SQLClient:
                     # Build database deps for this specific database
                     deps = get_database_deps(db_id)
 
-                    # Run preprocess_sql so the live DB matches preprocess_schema.
-                    # This ensures validate_query (EXPLAIN) sees the same tables
-                    # the benchmark expects. The evaluation phase will re-run them.
+                    # Run preprocess_sql via psycopg2 — fully independent from
+                    # the SQLAlchemy pool so there are no lock conflicts.
+                    # Then invalidate the validator's per-engine schema cache
+                    # so EXPLAIN sees the post-preprocess table state.
                     if preprocess_sql:
                         self.logger.debug(
-                            f"Running {len(preprocess_sql)} preprocess_sql statement(s) for {db_id}"
+                            f"Running {len(preprocess_sql)} preprocess_sql"
+                            f" statement(s) for {db_id}"
                         )
-                        _execute_raw_statements(deps.database.engine, preprocess_sql)
+                        _run_psycopg2_statements(db_id, preprocess_sql, self.logger)
+                        invalidate_schema_cache(deps.database.engine)
 
                     try:
-                        # Run the agent pipeline with capped tool usage
-                        result = agent.run_sync(
+                        # Run the agent pipeline with capped tool usage.
+                        # NOTE: do NOT use the executor as a context manager
+                        # (`with` calls shutdown(wait=True) on exit, which
+                        # blocks until the thread finishes and defeats the
+                        # timeout entirely). Instead create it explicitly and
+                        # call shutdown(wait=False) so a timed-out thread is
+                        # simply abandoned.
+                        executor = concurrent.futures.ThreadPoolExecutor(
+                            max_workers=1, thread_name_prefix="agent_run"
+                        )
+                        future = executor.submit(
+                            agent.run_sync,
                             user_message,
                             deps=deps,
                             usage_limits=usage_limits,
                         )
-                    finally:
-                        # Clean up temp objects so the DB is restored for
-                        # the evaluation phase (which re-runs preprocess_sql itself)
-                        if clean_up_sql:
-                            self.logger.debug(
-                                f"Running {len(clean_up_sql)} clean_up_sql statement(s) for {db_id}"
+                        try:
+                            result = future.result(timeout=AGENT_RUN_TIMEOUT)
+                        except concurrent.futures.TimeoutError:
+                            executor.shutdown(wait=False, cancel_futures=True)
+                            raise TimeoutError(
+                                f"Agent run timed out after "
+                                f"{AGENT_RUN_TIMEOUT}s for db_id={db_id}"
                             )
+                        finally:
+                            executor.shutdown(wait=False, cancel_futures=True)
+                    finally:
+                        # Restore DB state via psycopg2 — same reasoning as above.
+                        if clean_up_sql:
                             try:
-                                _execute_raw_statements(
-                                    deps.database.engine, clean_up_sql
+                                _run_psycopg2_statements(
+                                    db_id, clean_up_sql, self.logger
                                 )
                             except Exception as cleanup_err:
                                 self.logger.warning(
@@ -197,10 +246,7 @@ class Sequel2SQLClient:
                     self.successful_requests += 1
                     span.set_attribute("attempts", attempt)
                     time.sleep(2)  # respect rate limits
-                    # result.output is a plain string (raw SQL) because the
-                    # benchmark agent uses output_type=str to avoid the anyOf
-                    # grammar schema that NVIDIA NIM / DeepSeek rejects.
-                    sql_text = result.output.strip()
+                    sql_text = result.output.sql.strip()
                     return f"```sql\n{sql_text}\n```"
 
                 except UsageLimitExceeded as e:

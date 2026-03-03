@@ -214,6 +214,7 @@ class InferenceEngine:
                     task_id,
                     description=f"Generating SQL Solutions [{model_name}] [green]\u2713{passed}[/green] [red]\u2717{failed}[/red]",
                 )
+                time.sleep(2)  # brief pause between queries
 
         # Final checkpoint save
         self.checkpoint_manager.save()
