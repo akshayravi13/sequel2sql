@@ -60,7 +60,7 @@ REQUIRED_PYTHON_VERSION = (3, 12)
 POSTGRES_CONTAINER = "sequel2sql_postgresql"
 POSTGRES_USER = "root"
 POSTGRES_PASSWORD = "123123"
-POSTGRES_PORT = 5433  # Use 5433 to avoid conflicts with local PostgreSQL on 5432
+POSTGRES_PORT = 5534  # Use 5534 to avoid conflicts with local PostgreSQL on 5432 (5433 is reserved by Windows in WSL2)
 # load postgres_db from env if set, otherwise default to "postgres"
 POSTGRES_DB = dotenv_values(ENV_FILE).get("DATABASE", "postgres")
 

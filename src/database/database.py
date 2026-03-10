@@ -144,7 +144,7 @@ class Database:
         return list(self.metadata.tables.keys())
 
     def execute_sql(self, sql_query: str) -> QueryResult:
-        """Execute a SQL query and return results. Only allows SELECT style queries.
+        """Execute a SQL query and return results. Blocks DDL statements.
 
         Args:
             sql_query: SQL query string to execute
@@ -153,10 +153,41 @@ class Database:
             QueryResult with execution results
 
         Raises:
-            InvalidQueryError: If query is not a SELECT statement
+            InvalidQueryError: If query is a DDL statement
         """
-        if not sql_query.strip().upper().startswith("SELECT"):
-            raise InvalidQueryError("Only SELECT style queries are allowed")
+        _ALLOWED_FIRST_TOKENS = {"SELECT", "WITH", "EXPLAIN"}
+        _WRITE_KEYWORDS = {
+            "INSERT", "UPDATE", "DELETE", "MERGE", "UPSERT",
+            "CREATE", "DROP", "ALTER", "TRUNCATE", "RENAME",
+            "GRANT", "REVOKE", "VACUUM", "REINDEX", "CLUSTER",
+            "COPY", "CALL", "DO",
+        }
+
+        # Strip leading comments (-- and /* */) and whitespace
+        import re
+        cleaned = re.sub(r"--[^\n]*", "", sql_query)
+        cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.DOTALL)
+        cleaned = cleaned.strip()
+
+        tokens = cleaned.upper().split()
+        first_token = tokens[0] if tokens else ""
+
+        if first_token not in _ALLOWED_FIRST_TOKENS:
+            raise InvalidQueryError(
+                f"Only SELECT / WITH / EXPLAIN queries are allowed (got {first_token})"
+            )
+
+        # Block WITH ... INSERT / UPDATE / DELETE (CTE + DML)
+        # Use word-boundary matching to avoid false positives on column names
+        # or string literals (e.g. SELECT comment FROM ..., WHERE x = 'UPDATE')
+        # Strip string literals before checking
+        no_strings = re.sub(r"'[^']*'", "''", cleaned)
+        upper_sql = no_strings.upper()
+        for kw in _WRITE_KEYWORDS:
+            if re.search(r"\b" + kw + r"\b", upper_sql):
+                raise InvalidQueryError(
+                    f"Write operation '{kw}' detected — only read-only queries are allowed"
+                )
 
         rows = []
         error = None

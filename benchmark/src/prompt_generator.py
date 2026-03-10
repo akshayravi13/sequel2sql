@@ -53,11 +53,29 @@ def generate_prompt(
     return prompt
 
 
+def _is_select_query(data: Dict[str, Any]) -> bool:
+    """
+    Return True if the first issue_sql in a record starts with SELECT.
+
+    Args:
+        data: A single dataset record
+
+    Returns:
+        True if the first issue_sql entry starts with SELECT (case-insensitive)
+    """
+    issue_sqls = data.get("issue_sql", [])
+    if not issue_sqls:
+        return False
+    return issue_sqls[0].strip().upper().startswith("SELECT")
+
+
 def generate_prompts_from_file(
     input_path: Path,
     output_path: Path,
     schema_field: str = "preprocess_schema",
     limit: int = None,
+    query_index: int = None,
+    select_only: bool = False,
 ) -> int:
     """
     Generate prompts from input JSONL file and save to output file.
@@ -67,6 +85,8 @@ def generate_prompts_from_file(
         output_path: Path to output JSONL file for prompts
         schema_field: Field name containing the schema
         limit: Optional limit on number of instances to process
+        query_index: If set, extract only the single 0-based record at this index
+        select_only: If True, filter to records whose first issue_sql starts with SELECT
 
     Returns:
         Number of prompts generated
@@ -78,8 +98,15 @@ def generate_prompts_from_file(
     with open(input_path, "r", encoding="utf-8") as f:
         data_list = [json.loads(line) for line in f]
 
-    if limit:
-        data_list = data_list[:limit]
+    if query_index is not None:
+        data_list = [data_list[query_index]]
+    else:
+        if select_only:
+            before = len(data_list)
+            data_list = [d for d in data_list if _is_select_query(d)]
+            logger.info(f"SELECT-only filter: {len(data_list)}/{before} records kept")
+        if limit:
+            data_list = data_list[:limit]
 
     logger.info(f"Generating prompts for {len(data_list)} instances...")
 

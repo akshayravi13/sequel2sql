@@ -22,38 +22,36 @@ This project uses [uv](https://github.com/astral-sh/uv) for fast, reliable Pytho
    uv sync
    ```
 
-2. **Set up LogFire (optional, for logging and monitoring):**
+2. **Configure API keys:**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and add your keys:
+   - `MISTRAL_API_KEY` — primary model (Mistral Large)
+   - `GOOGLE_API_KEY` — optional (Gemini Flash)
+   - `DATABASE` — PostgreSQL database name for the web UI
+   - `LOGFIRE_TOKEN` — optional, for observability
+
+3. **Set up LogFire (optional):**
    ```bash
    uv run logfire auth
    uv run logfire projects new
    ```
-   Then uncomment LogFire configuration in [src/agent/sqlagent.py](src/agent/sqlagent.py)
-
-3. **Configure Google API Key:**
-   - Visit [Google AI Studio](https://aistudio.google.com/apikey)
-   - Create a new API key
-   - Copy `.env.example` to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - Add your API key to `.env`:
-     ```
-     GOOGLE_API_KEY=your_actual_api_key_here
-     ```
+   LogFire is already configured in [src/agent/sqlagent.py](src/agent/sqlagent.py) via `logfire.configure(send_to_logfire="if-token-present")`.
 
 ### Running the Application
 
+The web interface requires a running PostgreSQL instance (see Docker section below).
+
 ```bash
-# Run the web interface (main application)
+# Run the web interface — connects to DATABASE from .env (default: "postgres")
 uv run python sequel2sql.py
+
+# Use a different database without editing .env
+DATABASE=california_schools_template uv run python sequel2sql.py
 ```
 
-Then open http://localhost:8000 in your browser to access the chat interface.
-
-```bash
-# Run the agent pipeline directly with test cases
-uv run python src/agent/sqlagent.py
-```
+Open http://localhost:8000 for the chat interface.
 
 ### Testing
 
@@ -61,13 +59,13 @@ uv run python src/agent/sqlagent.py
 # Run all tests
 uv run pytest
 
-# Run specific test file
+# Run a specific test file
 uv run pytest tests/test_validator.py
 
-# Run tests with verbose output
+# Verbose output
 uv run pytest -v
 
-# Run tests and inspect ChromaDB
+# Inspect ChromaDB contents
 uv run python tests/inspect_chroma_db.py
 ```
 
@@ -79,43 +77,41 @@ Run the BIRD-CRITIC PostgreSQL benchmark (530 queries):
 # Interactive mode (recommended for first-time users)
 ./benchmark.sh
 
-# Command-line mode - test with limited queries
+# Command-line mode — limit to N queries, optionally choose provider
 ./benchmark.sh --limit 20
+./benchmark.sh --limit 20 --provider mistral
 
-# Run full benchmark
+# Full benchmark
 ./benchmark.sh
 ```
 
-See [benchmark/README.md](benchmark/README.md) for detailed setup instructions, data downloads, and configuration.
+Available `--provider` options: `mistral`, `google`, `sequel2sql` (uses the agentic pipeline directly).
 
-### Docker Setup for Testing
+See [benchmark/README.md](benchmark/README.md) for data download and setup details.
+
+### Docker (PostgreSQL for development/web UI)
+
+All Docker configuration lives in `benchmark/docker-compose.yml` — there is no separate `docker/` directory.
 
 ```bash
-# Start PostgreSQL container
-docker compose -f docker/docker-compose.yml up -d postgres
+# Start containers (PostgreSQL + evaluation container)
+docker compose -f benchmark/docker-compose.yml up -d
 
-# Check container status
-docker compose -f docker/docker-compose.yml ps
+# Check status
+docker compose -f benchmark/docker-compose.yml ps
 
-# Test PostgreSQL connection
-docker compose -f docker/docker-compose.yml exec postgres psql -U root -d postgres -c "SELECT 1, version();"
+# Test connection
+docker compose -f benchmark/docker-compose.yml exec postgresql psql -U root -d postgres -c "SELECT 1, version();"
 
-# Stop containers
-docker compose -f docker/docker-compose.yml down
+# Stop
+docker compose -f benchmark/docker-compose.yml down
 ```
-
-See [docker/README.md](docker/README.md) for engine versions and connection strings.
 
 ### Managing Dependencies
 
 ```bash
-# Add a new dependency
 uv add <package-name>
-
-# Add a development dependency
 uv add --dev <package-name>
-
-# Update dependencies
 uv sync
 ```
 
@@ -123,75 +119,93 @@ uv sync
 
 ### System Overview
 
-Sequel2SQL uses a **deterministic orchestration pipeline** that combines AST-based validation, semantic retrieval, and LLM reasoning to fix SQL queries. The workflow (see [assets/flowchart.jpg](assets/flowchart.jpg)):
+Sequel2SQL uses an **agentic pipeline** combining AST-based validation, semantic retrieval, and LLM reasoning. The core flow for fixing a SQL query:
 
-1. **Syntax Validation** - Parse query through AST validator to detect syntax/schema errors
-2. **Syntax Fixing** - If errors found, use syntax fixer agent (up to 3 retries)
-3. **Semantic Retrieval** - Embed query and retrieve top 6 similar examples from ChromaDB
-4. **LLM Reasoning** - Main agent generates corrected query with few-shot context
-5. **Validation** - Return corrected query with explanation
+1. **Schema Discovery** — retrieve relevant table schemas from the live database
+2. **Validation** — AST-based syntax and schema error detection via sqlglot
+3. **Semantic Retrieval** — embed query intent and fetch top-6 similar examples from ChromaDB
+4. **LLM Reasoning** — agent generates corrected query using schema, errors, and few-shot examples
+5. **Execution** — optionally run corrected query to verify
 
 ### Core Components
 
 **Agent Layer** ([src/agent/](src/agent/)):
-- **sqlagent.py**: Main orchestration pipeline with two Pydantic AI agents:
-  - `agent`: Main SQL assistant using `gemini-3-flash-preview`
-  - `syntax_fixer_agent`: Dedicated syntax error fixer
-- **prompts/db_agent_prompt.py**: System prompts for agents
-- Tools: `validate_query()` and `similar_examples_tool()` available to main agent
+- **sqlagent.py**: Defines three Pydantic AI agents and their registered tools:
+  - `agent`: Benchmark/default agent (`mistral:mistral-large-latest`, uses `BENCHMARK_PROMPT`)
+  - `webui_agent`: Interactive chat agent (`mistral:mistral-large-latest`, uses `WEBUI_PROMPT`). This is what `sequel2sql.py` exposes via `webui_agent.to_web()`.
+  - `syntax_fixer_agent`: Dedicated syntax-only fixer (returns raw SQL string, no explanation)
+  - `DEFAULT_MODEL = "mistral:mistral-large-latest"` — change here to switch models globally
+- **prompts/base_prompt.py**: Core identity, constraints, and tool catalog shared by all agents
+- **prompts/benchmark_prompt.py**: Batch/benchmark-mode prompt extension
+- **prompts/webui_prompt.py**: Interactive chat prompt extension with routing logic
+
+**Tools registered on `agent` and `webui_agent`:**
+- `analyze_and_fix_sql` — orchestrates schema fetch + validation + few-shot retrieval in one call
+- `describe_database_schema` — returns DDL-like schema for specified tables
+- `execute_sql_query` — runs SELECT queries against the live database
+- `validate_query` — plain validation without database context
+- `similar_examples_tool` / `find_similar_examples` — semantic search over ChromaDB
 
 **AST Parser & Validation** ([src/ast_parsers/](src/ast_parsers/)):
-- **validator.py**: SQL syntax and schema validation using sqlglot
-- **query_analyzer.py**: AST-based query analysis for structural patterns
-- **llm_tool.py**: Simplified validation interface for agent tool calls
-- **error_codes.py**, **error_context.py**: Structured error handling with canonical tags
-- **models.py**: Pydantic models for validation results
+- **validator.py**: SQL syntax and schema validation using sqlglot; detects silent fixes
+- **query_analyzer.py**: AST-based structural analysis (joins, aggregations, subqueries, etc.)
+- **llm_tool.py**: `validate_sql()` — the validation interface called by agent tools
+- **error_codes.py**, **error_context.py**: Structured error taxonomy with canonical tags (e.g., `SYNTAX_ERROR`, `SCHEMA_ERROR`)
+- **models.py**: Pydantic models for `ValidationResult`, `ValidationErrorOut`
+
+**Database Layer** ([src/database/](src/database/)):
+- **database.py**: `Database` class — SQLAlchemy-based, PostgreSQL-only, reflects schema on init, limits queries to SELECT only (caps at 100 rows)
+- **deps.py**: `AgentDeps` dataclass — dependency injection container for agent tools
+- **tools.py**: `execute_sql()` tool function; blocks system catalog queries and routes through `AgentDeps`
+- **format_schema.py**: Formats reflected SQLAlchemy metadata into human-readable DDL text
 
 **Vector Database RAG** ([src/query_intent_vectorDB/](src/query_intent_vectorDB/)):
-- **search_similar_query.py**: Semantic search over training examples using ChromaDB
-- **embed_query_intent.py**: Query embedding using sentence-transformers
-- **process_query_intent.py**: AST-based query intent extraction
-- Uses `all-MiniLM-L6-v2` for embeddings, stored in [src/chroma_db/](src/chroma_db/)
+- **search_similar_query.py**: `find_similar_examples()` — semantic search returning `FewShotExample` objects
+- **embed_query_intent.py**: Embedding logic using `all-MiniLM-L6-v2`
+- **process_query_intent.py**: AST-based query intent extraction for indexing
+- ChromaDB collection `query_intents` persisted in [src/chroma_db/](src/chroma_db/)
 
 **Entry Points:**
-- **sequel2sql.py**: Web interface via `agent.to_web()` (http://localhost:8000)
-- **src/agent/sqlagent.py**: Direct pipeline execution with test cases
+- **sequel2sql.py**: Launches web UI via `webui_agent.to_web(deps=...)` on port 8000
+- **benchmark/main.py**: Benchmark orchestrator (called by `benchmark.sh`); 5-phase pipeline: prompt generation → LLM inference → post-processing → Docker eval → results
 
 **Benchmarking** ([benchmark/](benchmark/)):
-- BIRD-CRITIC PostgreSQL benchmark runner (530 queries)
-- Smart API key rotation, checkpointing, Docker-based evaluation
-- See [benchmark/README.md](benchmark/README.md) for details
+- **main.py**: Main entry point; interactive or `--limit N --provider PROVIDER` CLI mode
+- **src/config.py**: Provider configs (mistral, google, sequel2sql), API key loading
+- **src/inference_engine.py**: Sequential query processing with checkpointing
+- **src/sequel2sql_client.py**: Calls the local `webui_agent` pipeline instead of an external API
+- **src/checkpoint_manager.py**: Saves/resumes benchmark runs; outputs in `benchmark/outputs/run_<timestamp>/`
 
 ### Key Dependencies
 
-- **pydantic-ai**: Agent framework and LLM orchestration
-- **google-genai**: Gemini API access (`gemini-3-flash-preview` model)
+- **pydantic-ai**: Agent framework, tool registration, `RunContext`, `ModelRetry`
+- **mistralai** / **google-genai**: LLM backends
 - **chromadb**: Vector database for semantic search
-- **sentence-transformers**: Query embedding (`all-MiniLM-L6-v2`)
-- **sqlglot**: SQL parsing and AST analysis
-- **logfire**: Optional observability and monitoring
+- **sentence-transformers**: `all-MiniLM-L6-v2` embedding model
+- **sqlglot**: SQL parsing, AST analysis, dialect-aware validation
+- **sqlalchemy**: Database connectivity and schema reflection
+- **logfire**: Optional observability (`send_to_logfire="if-token-present"`)
 - **uvicorn**: ASGI server for web interface
 
 ### Important Implementation Details
 
-**Pipeline Execution Flow** ([src/agent/sqlagent.py](src/agent/sqlagent.py)):
-- `run_pipeline()` is the main async orchestration function
-- Validation happens deterministically BEFORE agent calls (not as agent tool)
-- Syntax fixing uses a separate agent with up to 3 retries
-- Few-shot examples retrieved using AST-based semantic search
-- Final agent call includes: query intent, validated SQL, and similar examples
+**Database Connection** ([src/agent/sqlagent.py](src/agent/sqlagent.py)):
+- `get_database_deps(database_name, ...)` creates an `AgentDeps` with a `Database` instance
+- Default connection: `localhost:5534`, user `root`, password `123123`
+- `Database.__init__` defaults to port 5432; `get_database_deps` overrides to 5534 for Docker
 
 **Validation Strategy**:
-- Schema files stored in [benchmark/data/schemas/](benchmark/data/schemas/) as JSON
-- Validation uses sqlglot parser with PostgreSQL dialect
-- Returns structured errors with canonical tags (e.g., `SYNTAX_ERROR`, `SCHEMA_ERROR`)
-- See [src/ast_parsers/llm_tool.py](src/ast_parsers/llm_tool.py) for validation interface
+- `validate_sql(sql, db_name, dialect)` in [src/ast_parsers/llm_tool.py](src/ast_parsers/llm_tool.py) is the agent-facing interface
+- Schema context is loaded from the live database via SQLAlchemy reflection (not from static JSON schema files)
+- Validation catches both hard parse errors and "silent fixes" (sqlglot auto-corrects without raising)
 
 **Vector Database**:
 - ChromaDB collection: `query_intents`
-- Documents indexed by AST-based query structure, not just raw SQL text
-- Semantic search uses query intent + structural similarity
-- Database persisted in [src/chroma_db/](src/chroma_db/)
+- Documents indexed by AST-extracted query intent, not raw SQL
+- `find_similar_examples(query, n_results=6)` returns structurally diverse examples with diversity filtering to prevent near-duplicate results
+
+**Module Import Note**:
+- The directory is `src/query_intent_vectorDB/` (uppercase DB) but Python imports use `src.query_intent_vectordb` (lowercase). This works silently on macOS (case-insensitive filesystem) but may fail on Linux.
 
 ## Code Style Guidelines
 
@@ -202,12 +216,11 @@ From [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md):
 - **Braces**: Opening braces on next line for class/method declarations
 - **Spacing**: One space between operators and operands
 - **Variable naming**: Descriptive names (avoid single-letter variables like `a` or `x`)
-- **Commits**: Must be atomic - one logical change per commit
-- **Testing**: Add tests for any new functionality
+- **Commits**: Must be atomic — one logical change per commit
 
 ## Project-Specific Notes
 
-- This project focuses on PostgreSQL specifically, not general SQL
-- The goal is error correction and optimization, not initial query generation
-- RAG context includes database schemas, official PostgreSQL docs, and past corrections
-- Agent-based approach means queries go through multi-step reasoning, not single-shot generation
+- PostgreSQL-only — not intended for other SQL dialects
+- The goal is error correction, not initial query generation (NL2SQL)
+- Only SELECT queries are permitted; INSERT/UPDATE/DELETE/DDL are blocked at the tool layer
+- `benchmark/agent/` directory exists but is currently empty (the pipeline is in `benchmark/main.py` + `benchmark/src/`)

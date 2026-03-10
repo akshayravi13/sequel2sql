@@ -6,16 +6,23 @@ Deterministic orchestration pipeline that validates SQL, fixes syntax
 errors, retrieves few-shot examples, and calls the main agent.
 """
 
+import os
 import sys
 from pathlib import Path
 from typing import List, Optional
 
 import logfire
-import sqlglot
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
-from sqlglot import exp
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
+
+from src.db_confirmed_fixes.retriever import (
+    find_similar_confirmed_fixes,
+    save_confirmed_fix,
+)
 
 # Add both project root and src/ to sys.path for imports to work
 project_root = Path(__file__).parent.parent.parent
@@ -23,12 +30,16 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
 # noqa: E402 - Ignore import order since we need to set up sys.path first
+import time
+
 from src.agent.prompts.benchmark_prompt import BENCHMARK_PROMPT  # noqa: E402
 from src.agent.prompts.webui_prompt import WEBUI_PROMPT  # noqa: E402
-from src.ast_parsers.llm_tool import validate_sql  # noqa: E402
-from src.ast_parsers.models import ValidationErrorOut  # noqa: E402
+from src.ast_parsers import ValidationResult, validate_with_db  # noqa: E402
 from src.database import AgentDeps, Database, DBQueryResponse  # noqa: E402
 from src.database import execute_sql as _execute_sql  # noqa: E402
+from src.error_taxonomy.generic_skills import (  # noqa: E402
+    get_error_taxonomy_skill as _get_taxonomy_skill,
+)
 from src.query_intent_vectordb.search_similar_query import (  # noqa: E402
     FewShotExample,
     find_similar_examples,
@@ -44,13 +55,45 @@ load_dotenv()
 SUPPORTED_MODELS = {
     "mistral": "mistral:mistral-large-latest",
     "google": "google-gla:gemini-3-flash-preview",
+    "codestral": "mistral:codestral-latest",
+    "nvidia": "deepseek-ai/deepseek-v3.2",
 }
-DEFAULT_MODEL = "mistral:mistral-large-latest"
+
+
+def _build_nvidia_model() -> OpenAIChatModel:
+    """Build an OpenAIChatModel pointed at the NVIDIA NIM API."""
+    nvidia_api_key = os.environ.get("NVIDIA_API_KEY", "")
+    if not nvidia_api_key:
+        raise ValueError(
+            "NVIDIA_API_KEY is not set in the environment. "
+            "Please add it to your .env file."
+        )
+    nvidia_client = AsyncOpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=nvidia_api_key,
+    )
+    return OpenAIChatModel(
+        "deepseek-ai/deepseek-v3.2",
+        provider=OpenAIProvider(openai_client=nvidia_client),
+    )
+
+
+# Pick DEFAULT_MODEL value from .env, default to Mistral if not set or invalid
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "mistral").lower()
 
 
 # Logfire configuration (make sure to set LOGFIRE_TOKEN in .env for logging to work)
 logfire.configure(send_to_logfire="if-token-present")
 logfire.instrument_pydantic_ai()
+
+# =============================================================================
+# Skills Configuration
+# =============================================================================
+
+from src.agent.skills_config import (  # noqa: E402
+    get_db_skill_instructions,
+    skills_toolset,
+)
 
 # =============================================================================
 # Helper Functions
@@ -60,7 +103,7 @@ logfire.instrument_pydantic_ai()
 def get_database_deps(
     database_name: str,
     host: str = "localhost",
-    port: int = 5433,
+    port: int = 5534,
     user: str = "root",
     password: str = "123123",
     max_return_values: int = 200,
@@ -70,7 +113,7 @@ def get_database_deps(
     Args:
             database_name: Name of the PostgreSQL database to connect to
             host: PostgreSQL host (default: localhost)
-            port: PostgreSQL port (default: 5433)
+            port: PostgreSQL port (default: 5534)
             user: PostgreSQL username (default: root)
             password: PostgreSQL password (default: 123123)
             max_return_values: Maximum number of result values to return (default: 200)
@@ -86,23 +129,6 @@ def get_database_deps(
         password=password,
     )
     return AgentDeps(database=database, max_return_values=max_return_values)
-
-
-def _extract_table_names(sql: str, dialect: str) -> set[str]:
-    """
-    Best-effort extraction of table names from SQL query using sqlglot.
-
-    Returns empty set if parsing fails.
-    """
-    try:
-        parsed = sqlglot.parse_one(sql, dialect=dialect)
-        tables = set()
-        for table in parsed.find_all(exp.Table):
-            if table.name:
-                tables.add(table.name)
-        return tables
-    except Exception:
-        return set()
 
 
 # =============================================================================
@@ -123,7 +149,6 @@ class ValidateQueryToolInput(BaseModel):
     """Input for the SQL validation tool."""
 
     sql: str
-    db_id: Optional[str] = None
     dialect: str = "postgres"
 
 
@@ -151,12 +176,28 @@ class FewShotExamplesResult(BaseModel):
 #     explanation: str = Field(..., description="Explanation of what was fixed and why")
 
 
+class BenchmarkOutput(BaseModel):
+    """Structured output for the benchmark agent — one SQL query, no explanation."""
+
+    sql: str = Field(
+        description="The corrected PostgreSQL query. Raw SQL only — no commentary."
+    )
+
+
 class SchemaDescription(BaseModel):
     """Database schema information returned by describe_database_schema tool."""
 
     database_id: str
     available_tables: list[str]
     schema_description: str
+
+
+class SaveConfirmedFixInput(BaseModel):
+    database: str
+    intent: str  # the user's original natural language request
+    corrected_sql: str
+    error_sql: str
+    explanation: str  # what was wrong and what specifically was changed to fix it
 
 
 class SQLAnalysisContext(BaseModel):
@@ -169,10 +210,20 @@ class SQLAnalysisContext(BaseModel):
 
     # Validation results
     has_errors: bool
-    validation_errors: List[dict]  # [{tag: "SYNTAX_ERROR", message: "..."}]
+    # Each dict: {tag, message, taxonomy_category}
+    validation_errors: List[dict]
 
     # Few-shot examples
     similar_examples: List[dict]  # [{sql: "...", intent: "...", explanation: "..."}]
+
+    # Taxonomy skill guidance (populated when errors have a known category)
+    taxonomy_skill_guidance: Optional[str] = None
+
+    db_confirmed_fixes: List[dict] = []
+    # Past fixes confirmed correct by real users on this specific database.
+    # Retrieved from the per-database store in src/db_confirmed_fixes/.
+    # Weight these more heavily than general examples — they reflect real
+    # confirmed corrections on this exact schema.
 
     # Metadata
     query_intent: str
@@ -187,7 +238,10 @@ class SQLAnalysisContext(BaseModel):
 agent = Agent(
     DEFAULT_MODEL,
     deps_type=AgentDeps,
+    output_type=BenchmarkOutput,
     system_prompt=BENCHMARK_PROMPT,
+    toolsets=[skills_toolset],
+    model_settings={"parallel_tool_calls": False},
 )
 
 # Web UI agent
@@ -195,6 +249,7 @@ webui_agent = Agent(
     DEFAULT_MODEL,
     deps_type=AgentDeps,
     system_prompt=WEBUI_PROMPT,
+    toolsets=[skills_toolset],
 )
 
 SYNTAX_FIXER_PROMPT = (
@@ -213,11 +268,11 @@ syntax_fixer_agent = Agent(
 
 
 # =============================================================================
-# Tool Definitions (kept for future use as agent tools)
+# Tool Definitions — registered on benchmark and/or webui agents
 # =============================================================================
 
 
-@agent.tool
+@agent.tool()
 def execute_sql_query(ctx: RunContext[AgentDeps], sql: str) -> DBQueryResponse:
     """Execute the given SQL SELECT query on the connected database and return the result.
 
@@ -231,49 +286,32 @@ def execute_sql_query(ctx: RunContext[AgentDeps], sql: str) -> DBQueryResponse:
     return _execute_sql(ctx, sql)
 
 
-@agent.tool_plain
-def validate_query(input: ValidateQueryToolInput) -> List[ValidationErrorOut]:
+def validate_query(
+    ctx: RunContext[AgentDeps], sql: str, dialect: str = "postgres"
+) -> ValidationResult:
     """
-    Validate SQL query syntax and optionally check against a database schema.
+    Validate SQL query syntax and schema against the connected live database.
 
     Use this tool to:
     - Check if a SQL query has valid PostgreSQL syntax
-    - Detect schema errors like non-existent tables/columns (if schema provided)
-    - Get metadata about query structure
+    - Detect schema errors like non-existent tables/columns
+    - Get metadata about query structure (clauses, complexity, tables referenced)
 
-    Returns validation status, any errors found, and structural metadata.
+    Reports ALL errors simultaneously: syntax errors, hallucinated tables,
+    hallucinated columns — even when the SQL is too broken to fully parse.
+
+    Returns validation status, all errors found, and structural metadata.
     """
-    return validate_sql(
-        input.sql,
-        db_name=input.db_id,
-        dialect=input.dialect,
+    return validate_with_db(
+        sql,
+        ctx.deps.database.engine,
+        dialect=dialect,
     )
 
 
-@agent.tool_plain
-def similar_examples_tool(
-    query: str,
-    n_results: int = 6,
-) -> FewShotExamplesResult:
-    """
-        Find similar SQL query examples from the training database
-        using semantic search.
-
-    Use this tool to:
-    - Find examples of similar queries that were previously corrected
-    - Get context for how similar errors were fixed
-    - Retrieve queries with similar intent/structure
-
-        Returns structurally diverse few-shot examples with metadata.
-    """
-    examples = find_similar_examples(query, n_results=n_results)
-    return FewShotExamplesResult(
-        examples=examples,
-        query_intent=query,
-    )
-
-
-@agent.tool
+# =============================================================================
+# analyze_and_fix_sql — webui-only orchestration tool (not registered on benchmark).
+# =============================================================================
 def analyze_and_fix_sql(
     ctx: RunContext[AgentDeps],
     issue_sql: str,
@@ -311,26 +349,31 @@ def analyze_and_fix_sql(
     db_id = database.database_name
     dialect = "postgres"
 
+    # Step 1: Validate SQL against the live database.
+    # Collects syntax + hallucinated-table + hallucinated-column errors together.
+    result = validate_with_db(issue_sql, database.engine, dialect=dialect)
+
+    # Step 2: Use table names from the parse result (no re-parse needed)
     if include_all_tables:
         schema_description = database.describe_schema()
         available_tables = database.table_names
-    else:
-        # Try to extract referenced tables from the query
-        # This is best-effort - if parsing fails, fall back to all tables
-        try:
-            referenced_tables = _extract_table_names(issue_sql, dialect)
-            if referenced_tables:
-                schema_description = database.describe_schema(list(referenced_tables))
-                available_tables = list(referenced_tables)
-            else:
-                schema_description = database.describe_schema()
-                available_tables = database.table_names
-        except Exception:
+    elif result.query_metadata and result.query_metadata.tables:
+        referenced_tables = result.query_metadata.tables
+        # The issue_sql may reference wrong/typo table names (that's the bug
+        # we're fixing). Only describe tables that actually exist in the DB;
+        # fall back to the full schema when none of the referenced tables are
+        # real so the agent can see what IS available.
+        real_tables = database.table_names
+        existing_referenced = [t for t in referenced_tables if t in real_tables]
+        if existing_referenced:
+            schema_description = database.describe_schema(existing_referenced)
+            available_tables = real_tables  # always show all real tables
+        else:
             schema_description = database.describe_schema()
-            available_tables = database.table_names
-
-    # Step 2: Validate SQL query
-    validation_errors = validate_sql(issue_sql, db_name=db_id, dialect=dialect)
+            available_tables = real_tables
+    else:
+        schema_description = database.describe_schema()
+        available_tables = database.table_names
 
     # Step 3: Get similar examples
     examples = find_similar_examples(query_intent, n_results=6)
@@ -345,21 +388,51 @@ def analyze_and_fix_sql(
         for ex in examples
     ]
 
+    # Step 4: Format validation errors and look up taxonomy skill guidance
+    validation_errors_formatted = [
+        {
+            "tag": err.tag.value,
+            "message": err.message,
+            "taxonomy_category": err.taxonomy_category,
+        }
+        for err in result.errors
+    ]
+
+    seen_categories: set[str] = set()
+    taxonomy_skill_parts: list[str] = []
+    for err in result.errors:
+        cat = err.taxonomy_category
+        if cat in seen_categories:
+            continue
+        seen_categories.add(cat)
+        guidance = _get_taxonomy_skill(cat)
+        if not guidance.startswith("No skill file"):
+            taxonomy_skill_parts.append(guidance)
+    taxonomy_skill_guidance: Optional[str] = (
+        "\n\n---\n\n".join(taxonomy_skill_parts) if taxonomy_skill_parts else None
+    )
+
+    db_fixes = find_similar_confirmed_fixes(
+        intent=query_intent,
+        database=db_id,
+        n_results=4,
+    )
+
     return SQLAnalysisContext(
         database_id=db_id,
         available_tables=available_tables,
         schema_description=schema_description,
-        has_errors=(len(validation_errors) > 0),
-        validation_errors=[
-            {"tag": err.tag, "message": err.message} for err in validation_errors
-        ],
+        has_errors=bool(result.errors),
+        validation_errors=validation_errors_formatted,
         similar_examples=similar_examples_formatted,
+        taxonomy_skill_guidance=taxonomy_skill_guidance,
+        db_confirmed_fixes=db_fixes,
         query_intent=query_intent,
         dialect=dialect,
     )
 
 
-@agent.tool
+# describe_database_schema — webui-only.
 def describe_database_schema(
     ctx: RunContext[AgentDeps],
     table_names: list[str] | None = None,
@@ -385,11 +458,108 @@ def describe_database_schema(
     )
 
 
-webui_agent.tool(name="execute_sql_query")(execute_sql_query)
-webui_agent.tool_plain(name="validate_query")(validate_query)
-webui_agent.tool_plain(name="find_similar_examples")(similar_examples_tool)
+# get_error_taxonomy_skill — registered on both agents.
+def get_error_taxonomy_skill(error_category: str) -> str:
+    """
+    Look up best-practice approaches for fixing a SQL error of
+    the given taxonomy category.
+
+    Call this BEFORE attempting to fix any categorized error.
+    Pass the taxonomy_category from a ValidationErrorOut
+    (e.g. "join_related", "syntax", "aggregation", "semantic").
+
+    Returns a markdown guide with core approaches and any
+    previously learned examples from confirmed past fixes.
+    """
+    return _get_taxonomy_skill(error_category)
+
+
+# save_confirmed_fix_tool — webui-only.
+def save_confirmed_fix_tool(input: SaveConfirmedFixInput) -> str:
+    """
+    Persist a user-confirmed SQL fix to the database-specific knowledge store.
+
+    Call this ONLY after the user explicitly confirms the fix is correct.
+    Confirmation phrases to watch for: "yes that's right", "perfect", "exactly",
+    "that works", "correct", "looks good", "that's correct", "great", "yeah".
+
+    `intent` should be the user's original natural language request from the
+    start of this fix session — not a summary, not a paraphrase. Take it
+    directly from the first substantive user message describing what they wanted
+    the query to do.
+
+    `explanation` should be 2–4 sentences: what was wrong in the original SQL
+    and what specific change fixed it. This gets retrieved later as context so
+    make it precise and useful, not generic.
+
+    `database` comes from ctx.deps.database.database_name.
+    """
+    import json
+
+    result = save_confirmed_fix(
+        database=input.database,
+        intent=input.intent,
+        corrected_sql=input.corrected_sql,
+        error_sql=input.error_sql,
+        explanation=input.explanation,
+    )
+    return json.dumps(result)
+
+
+class FindSimilarConfirmedFixesInput(BaseModel):
+    intent: str
+    database: str
+
+
+# find_similar_confirmed_fixes_tool — registered on both benchmark and webui agents.
+def find_similar_confirmed_fixes_tool(input: FindSimilarConfirmedFixesInput) -> str:
+    """
+    Search for user-confirmed SQL fixes for this specific database based on the query intent.
+    Call this tool to find previously validated solutions that might apply to the current query.
+    It returns empty if the database knowledge store is empty or does not exist yet.
+    """
+    import json
+
+    fixes = find_similar_confirmed_fixes(
+        intent=input.intent, database=input.database, n_results=4
+    )
+    if not fixes:
+        return "No confirmed fixes found in the knowledge base."
+    return json.dumps(fixes)
+
+
+# --- webui agent tools ---
+webui_agent.tool(name="execute_sql_query", retries=3)(execute_sql_query)
+webui_agent.tool(name="validate_query")(validate_query)
 webui_agent.tool(name="analyze_and_fix_sql")(analyze_and_fix_sql)
 webui_agent.tool(name="describe_database_schema")(describe_database_schema)
+webui_agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
+webui_agent.tool_plain(name="save_confirmed_fix_tool")(save_confirmed_fix_tool)
+webui_agent.tool_plain(name="find_similar_confirmed_fixes_tool")(
+    find_similar_confirmed_fixes_tool
+)
+
+# --- benchmark agent tools ---
+agent.tool(name="validate_query")(validate_query)
+agent.tool_plain(name="get_error_taxonomy_skill")(get_error_taxonomy_skill)
+agent.tool_plain(name="find_similar_confirmed_fixes_tool")(
+    find_similar_confirmed_fixes_tool
+)
+
+
+# =============================================================================
+# Skills Instructions
+# =============================================================================
+
+
+@agent.instructions
+async def agent_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
+    return get_db_skill_instructions(ctx.deps.database.database_name)
+
+
+@webui_agent.instructions
+async def webui_skills_instructions(ctx: RunContext[AgentDeps]) -> str:
+    return get_db_skill_instructions(ctx.deps.database.database_name)
 
 
 # =============================================================================

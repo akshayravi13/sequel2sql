@@ -1,0 +1,4595 @@
+[
+  {
+    "instance_id": "PostgreSQL_10",
+    "db_id": "financial",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE account\n    SET date__timestamp = date__bigint::timestamp;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date__timestamp' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "date__timestamp"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date__bigint' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "date__bigint"
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UPDATE",
+      "clauses_present": [
+        "UPDATE"
+      ],
+      "tables": [
+        "account"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_16",
+    "db_id": "financial",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT to_char(generate_series, 'YYYY') FROM generate_series(MIN(date)::timestamptz, MAX(date)::timestamptz, '1 year') FROM loan;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 123.\n  rate_series, 'YYYY') FROM generate_series(MIN(date)::timestamptz, MAX(date)::timestamptz, '1 year') \u001b[4mFROM\u001b[0m loan;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0125,
+      "pattern_signature": "SELECT-FROM",
+      "clauses_present": [
+        "FROM",
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_24",
+    "db_id": "codebase_community",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT (select r.relname from pg_class r where r.oid = c.confrelid) as base_table,\\n       a.attname as base_col,\\n       (select r.relname from pg_class r where r.oid = c.conrelid) as referencing_table,\\n       UNNEST((select array_agg(attname) from pg_attribute where attrelid = c.conrelid and array[attnum] <@ c.conkey)) as referencing_col,\\n       pg_get_constraintdef(c.oid) contraint_sql  FROM pg_constraint c join pg_attribute a on c.confrelid=a.attrelid and a.attnum = ANY(confkey)\\n WHERE c.",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 83.\n  SELECT (select r.relname from pg_class r where r.oid = c.confrelid) as base_table,\u001b[4m\\\u001b[0mn       a.attname as base_col,\\n       (select r.relname from pg_class r where r.oid = c.conrelid) a",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0969,
+      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "pg_class"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_26",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT team_api_id, team_short_name FROM Team as data FULL OUTER JOIN (SELECT buildUpPlaySpeed, team_api_id FROM Team_Attributes ta WHERE team_api_id = data.team_api_id) AS subquery_alias ON data.team_api_id = subquery_alias.team_api_id;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'team_api_id' is ambiguous \u2014 exists in tables: team, team_attributes",
+        "taxonomy_category": "semantic",
+        "context": "team_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'team_api_id' is ambiguous \u2014 exists in tables: team, team_attributes",
+        "taxonomy_category": "semantic",
+        "context": "team_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'team_api_id' is ambiguous \u2014 exists in tables: team, team_attributes",
+        "taxonomy_category": "semantic",
+        "context": "team_api_id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1333,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "team",
+        "team_attributes"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_27",
+    "db_id": "financial",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH one AS ( SELECT date_trunc('year', date) as timeOne, COUNT(*) as trans_count FROM trans ORDER BY timeOne ), two AS ( SELECT date_trunc('year', date) as timeTwo, COUNT(*) as loan_count FROM loan ORDER BY timeTwo ) SELECT timeOne as year, SUM(trans_count, loan_count) as count FROM one, two ORDER BY 1;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "The number of provided arguments (2) is greater than the maximum number of supported arguments (1). Line 1, Col: 270.\n  NT(*) as loan_count FROM loan ORDER BY timeTwo ) SELECT timeOne as year, SUM(trans_count, loan_count\u001b[4m)\u001b[0m as count FROM one, two ORDER BY 1;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1323,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-ORDER",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "WITH"
+      ],
+      "tables": [
+        "loan",
+        "one",
+        "trans",
+        "two"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 3
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_32",
+    "db_id": "financial",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "WITH tab_with_cardid AS (\n   select split(cardid, '-', 3)ivm_arr,\n\n           type,\n           last_refresh_date\n    FROM db.scema.table\n), ranked_visits AS (\n    SELECT *, ROW_NUMBER() OVER(PARTITION BY CONCAT(ivm_arr[2],item) as temp ORDER BY type) AS rn\n    FROM tab_with_cardid\n)\nSELECT cardid, pure_cardid\nFROM ranked_visits\nWHERE rn = 1",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 8, Col: 71.\n  ma.table\n), ranked_visits AS (\n    SELECT *, ROW_NUMBER() OVER(PARTITION BY CONCAT(ivm_arr[2],item) \u001b[4mas\u001b[0m temp ORDER BY type) AS rn\n    FROM tab_with_cardid\n)\nSELECT cardid, pure_cardid\nFROM ranked_visits\n\n\nRequired keyword: 'this' missing for <class 'sqlglot.expressions.Alias'>. Line 9, Col: 8.\n    SELECT *, ROW_NUMBER() OVER(PARTITION BY CONCAT(ivm_arr[2],item) as temp ORDER BY type) AS rn\n    \u001b[4mFROM\u001b[0m tab_with_cardid\n)\nSELECT cardid, pure_cardid\nFROM ranked_visits\nWHERE rn = 1\n\nalias does not support CTE. Line 9, Col: 8.\n    SELECT *, ROW_NUMBER() OVER(PARTITION BY CONCAT(ivm_arr[2],item) as temp ORDER BY type) AS rn\n    \u001b[4mFROM\u001b[0m tab_with_cardid\n)\nSELECT cardid, pure_cardid\nFROM ranked_visits\nWHERE rn = 1\n\n... and 1 more",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      },
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'table' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "table",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens",
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0563,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-WINDOW-ORDER",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "table"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_35",
+    "db_id": "codebase_community",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "begin insert into profiles (Id, CreationDate, WebsiteUrl) select new.Id, new.CreationDate, left(replace(new.WebsiteUrl, '.', '-'), charindex('@', replace(new.WebsiteUrl, '.', '-')) - 1);return new;end;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 12.\n  begin \u001b[4minsert\u001b[0m into profiles (Id, CreationDate, WebsiteUrl) select new.Id, new.CreationDate, left(replace(new.Webs",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "UNKNOWN",
+      "clauses_present": [],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_37",
+    "db_id": "student_club",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "insert into event (event_id, event_name, event_date, type, notes, location, status) values ('recAlAwtBZ0Fqbr5K', 'Annual Gala', '2023-12-15T19:00:00', 'Social', 'Annual Gala for club members', 'Grand Ballroom', 'Open') on conflict (event_id) do insert into failure (event, member) values ('recAlAwtBZ0Fqbr5K', 'rec280Sk7o31iG0Tx');",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Unknown option DO. Line 1, Col: 251.\n  :00', 'Social', 'Annual Gala for club members', 'Grand Ballroom', 'Open') on conflict (event_id) do \u001b[4minsert\u001b[0m into failure (event, member) values ('recAlAwtBZ0Fqbr5K', 'rec280Sk7o31iG0Tx');\n\nInvalid expression / Unexpected token. Line 1, Col: 244.\n  :00:00', 'Social', 'Annual Gala for club members', 'Grand Ballroom', 'Open') on conflict (event_id) \u001b[4mdo\u001b[0m insert into failure (event, member) values ('recAlAwtBZ0Fqbr5K', 'rec280Sk7o31iG0Tx');",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "VALUES-INSERT",
+      "clauses_present": [
+        "INSERT",
+        "VALUES"
+      ],
+      "tables": [
+        "event"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_39",
+    "db_id": "codebase_community",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT DISTINCT userid, tag\nFROM preference_tag\nWHERE tag @> (ARRAY['friend', 'cat']::VARCHAR[]);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'tag' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "tag",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'tag' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "tag",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0177,
+      "pattern_signature": "SELECT-DISTINCT-FROM-WHERE",
+      "clauses_present": [
+        "DISTINCT",
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "preference_tag"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_54",
+    "db_id": "financial",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT client.client_id, client.gender, disp.disp_id, address ->> 'PostCode' AS PostCode FROM client JOIN disp ON client.client_id = disp.client_id CROSS JOIN jsonb_array_elements(disp.addresses) AS address WHERE disp.client_id IN (100, 414);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'address' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "address",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'addresses' does not exist in table 'disp' (referenced as 'disp.addresses')",
+        "taxonomy_category": "semantic",
+        "context": "disp.addresses",
+        "affected_clauses": [
+          "JOIN"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0802,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_CROSS-WHERE",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "JOIN_CROSS",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "client",
+        "disp"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_62",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT c1.user_id, COUNT(*) FROM user_actions c1 LEFT JOIN (SELECT user_id, action, action_time FROM user_actions WHERE action = 'LOGIN') c2 ON c1.user_id = c2.user_id AND c2.action_time > c1.action_time LEFT JOIN (SELECT user_id, action, action_time FROM user_actions WHERE action = 'BUY') c3 ON c1.user_id = c3.user_id AND c3.action_time > c1.action_time AND c3.action_time < c2.action_time WHERE c1.action = 'SEARCH' AND c2.user_id IS NOT NULL AND c3.user_id IS NULL GROUP BY 1",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action_time' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action_time",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action_time' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action_time",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'action' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "action",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2552,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "user_actions"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 2,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_63",
+    "db_id": "card_games",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT c.id, c.name FROM cards c WHERE c.id IN (SELECT unnest(card_order) FROM decks WHERE id = 1);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'card_order' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "card_order",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'id' is ambiguous \u2014 exists in tables: cards, decks",
+        "taxonomy_category": "semantic",
+        "context": "id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1146,
+      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "cards",
+        "decks"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_70",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT\n            link_to_member,\n            CASE\n                WHEN (SUBSTRING(ROUND(SUM(hours)::NUMERIC, 0)::TEXT FROM '.{1}$') IN ('5', '6', '7', '8', '9', '0'))\n                THEN CEIL(SUM(hours) / 10) * 10\n                ELSE FLOOR(SUM(hours) / 10) * 10\n            END AS rounded_hours,\n            RANK() OVER (ORDER BY\n                CASE\n                    WHEN (SUBSTRING(ROUND(SUM(hours)::NUMERIC, 0)::TEXT FROM '.{1}$') IN ('5', '6', '7', '8', '9', '0'))\n                    THEN",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'hours' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "hours",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0542,
+      "pattern_signature": "SELECT-FROM-GROUP-WINDOW-ORDER",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "ORDER",
+        "SELECT",
+        "WINDOW"
+      ],
+      "tables": [
+        "attendance"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 7
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_73",
+    "db_id": "codebase_community",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "select posttypeid\n        case when tags like ('%bayesian%','%distributions%')\n        then 1 else 0 end as keyword_count\n        from posts",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 2, Col: 17.\n  select posttypeid\n        case \u001b[4mwhen\u001b[0m tags like ('%bayesian%','%distributions%')\n        then 1 else 0 end as keyword_count\n        from ",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_74",
+    "db_id": "toxicology",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT count(bond_id), molecule_id FROM bond GROUP BY molecule_id ORDER BY molecule_id last_update DESC;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 98.\n  SELECT count(bond_id), molecule_id FROM bond GROUP BY molecule_id ORDER BY molecule_id \u001b[4mlast_update\u001b[0m DESC;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0167,
+      "pattern_signature": "SELECT-FROM-GROUP-ORDER",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "bond"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_93",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT set_translations.language\n              CASE WHEN set_translations.language IN (SELECT foreign_data.language in foreign_data)\n              THEN 'common'\n              ELSE 'not common'\n              END\n        FROM set_translations",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 2, Col: 23.\n  SELECT set_translations.language\n              CASE \u001b[4mWHEN\u001b[0m set_translations.language IN (SELECT foreign_data.language in foreign_data)\n              THEN 'com",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_101",
+    "db_id": "california_schools",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT DISTINCT ON (\"County Code\") * FROM frpm ORDER BY \"County Code\", \"Enrollment (K-12)\" DESC;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'County Code' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "County Code",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'County Code' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "County Code",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Enrollment (K-12)' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Enrollment (K-12)",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-DISTINCT-DISTINCT_ON-FROM-ORDER",
+      "clauses_present": [
+        "DISTINCT",
+        "DISTINCT_ON",
+        "FROM",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "frpm"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_103",
+    "db_id": "european_football_2",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "INSERT INTO historical_rating (player_fifa_api_id, player_api_id, grouped_rating) SELECT player_fifa_api_id, player_api_id AS grouped_rating FROM player_attributes GROUP BY player_fifa_api_id, player_api_id;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_fifa_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_fifa_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_fifa_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_fifa_api_id",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'player_api_id' is ambiguous \u2014 exists in tables: player_attributes, historical_rating",
+        "taxonomy_category": "semantic",
+        "context": "player_api_id",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0208,
+      "pattern_signature": "SELECT-FROM-GROUP-INSERT",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "INSERT",
+        "SELECT"
+      ],
+      "tables": [
+        "historical_rating",
+        "player_attributes"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_105",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH card_activity AS ( SELECT to_date(fe.start_date_key::text, 'YYYYMMDD') AS start_date, to_date(fe.end_date_key::text, 'YYYYMMDD') AS end_date, dp.set_name, dp.set_code FROM fact_collection fe INNER JOIN dim_set dp ON fe.set_key = dp.set_key ) SELECT date_trunc('month', month_series) AS month, COUNT(*) AS existing_cards, sa.set_name FROM ( SELECT generate_series( (SELECT MIN(to_date(start_date_key::text, 'YYYYMMDD')) FROM fact_collection), '2100-12-31', INTERVAL '1 month') AS month_series ) A",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'start_date_key' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "start_date_key",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.275,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-GROUP-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "JOIN_INNER",
+        "SELECT",
+        "SUBQUERY",
+        "WITH"
+      ],
+      "tables": [
+        "card_activity",
+        "dim_set",
+        "fact_collection"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 2,
+      "num_ctes": 1,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_110",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH TAB AS (SELECT id as league_id, name FROM League UNION SELECT id, name FROM League) , RECURSIVE recuree AS ( SELECT league_id, name FROM TAB UNION SELECT E.league_id, E.name FROM TAB E JOIN recuree S ON E.id = S.league_id)  SELECT * FROM recuree",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting (. Line 1, Col: 108.\n  ITH TAB AS (SELECT id as league_id, name FROM League UNION SELECT id, name FROM League) , RECURSIVE \u001b[4mrecuree\u001b[0m AS ( SELECT league_id, name FROM TAB UNION SELECT E.league_id, E.name FROM TAB E JOIN recuree S ON \n\nRequired keyword: 'expressions' missing for <class 'sqlglot.expressions.Aliases'>. Line 1, Col: 120.\n  ELECT id as league_id, name FROM League UNION SELECT id, name FROM League) , RECURSIVE recuree AS ( \u001b[4mSELECT\u001b[0m league_id, name FROM TAB UNION SELECT E.league_id, E.name FROM TAB E JOIN recuree S ON E.id = S.lea\n\nExpecting ). Line 1, Col: 120.\n  ELECT id as league_id, name FROM League UNION SELECT id, name FROM League) , RECURSIVE recuree AS ( \u001b[4mSELECT\u001b[0m league_id, name FROM TAB UNION SELECT E.league_id, E.name FROM TAB E JOIN recuree S ON E.id = S.lea\n\n... and 1 more",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      },
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'recuree' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "recuree",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens",
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1031,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-UNION",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "JOIN",
+        "SELECT",
+        "UNION",
+        "WITH"
+      ],
+      "tables": [
+        "league",
+        "recuree",
+        "tab"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_111",
+    "db_id": "superhero",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "SELECT *\nFROM superhero.\"%_id\";",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table '%_id' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "%_id",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM",
+      "clauses_present": [
+        "FROM",
+        "SELECT"
+      ],
+      "tables": [
+        "%_id"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_114",
+    "db_id": "thrombosis_prediction",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT * FROM Examination AS e LEFT JOIN LATERAL (SELECT * FROM Laboratory WHERE ID = e.ID ORDER BY Date DESC LIMIT 2) AS lab ON true",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'ID' is ambiguous \u2014 exists in tables: laboratory, examination",
+        "taxonomy_category": "semantic",
+        "context": "ID",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1333,
+      "pattern_signature": "SELECT-FROM-JOIN-LATERAL-WHERE-ORDER-LIMIT-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "LATERAL",
+        "LIMIT",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "examination",
+        "laboratory"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_120",
+    "db_id": "superhero",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE superhero SET full_name = 'Superman' JOIN team_member_superhero ON superhero.id = team_member_superhero.superhero_id JOIN team_member ON team_member_superhero.team_member_id = team_member.id WHERE team_id = 91;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 48.\n  UPDATE superhero SET full_name = 'Superman' \u001b[4mJOIN\u001b[0m team_member_superhero ON superhero.id = team_member_superhero.superhero_id JOIN team_member ON team",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UPDATE",
+      "clauses_present": [
+        "UPDATE"
+      ],
+      "tables": [
+        "superhero"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_130",
+    "db_id": "student_club",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT COUNT(*) AS streak_count, 'April Meeting' AS event_name, 'MST' AS timezone, MIN(event_date) AS start_date, MAX(event_date) AS end_date FROM attendance WHERE event_name = 'April Meeting' GROUP BY DATE_TRUNC('day', event_date AT TIME ZONE 'UTC' AT TIME ZONE 'MST') ORDER BY end_date DESC LIMIT 1;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'event_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "event_date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'event_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "event_date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'event_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "event_date",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0365,
+      "pattern_signature": "SELECT-FROM-WHERE-GROUP-ORDER-LIMIT",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "LIMIT",
+        "ORDER",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "attendance"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 3
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_131",
+    "db_id": "formula_1",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT DATE_TRUNC('day', to_timestamp(transaction_timestamp / 1000000000.0)), COUNT(*) FROM pitstops GROUP BY DATE_TRUNC('day', transaction_timestamp)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'transaction_timestamp' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "transaction_timestamp",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'transaction_timestamp' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "transaction_timestamp",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0167,
+      "pattern_signature": "SELECT-FROM-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "SELECT"
+      ],
+      "tables": [
+        "pitstops"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_137",
+    "db_id": "financial",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "DROP TABLE IF EXISTS card, account, disp;CREATE TABLE account (account_id INT PRIMARY KEY NOT NULL, district_id INT NOT NULL, frequency TEXT NOT NULL, date DATE NOT NULL, disp_id INT NOT NULL, FOREIGN KEY (disp_id) REFERENCES disp(disp_id) ON UPDATE CASCADE ON DELETE CASCADE);CREATE TABLE disp (disp_id INT PRIMARY KEY NOT NULL, client_id INT NOT NULL, account_id INT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (account_id) REFERENCES account(account_id) ON UPDATE CASCADE ON DELETE CASCADE);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 26.\n  DROP TABLE IF EXISTS card\u001b[4m,\u001b[0m account, disp;CREATE TABLE account (account_id INT PRIMARY KEY NOT NULL, district_id INT NOT NULL, ",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UNKNOWN",
+      "clauses_present": [],
+      "tables": [
+        "card"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_138",
+    "db_id": "financial",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT COALESCE(json_agg(CASE WHEN client.client_id IS NULL THEN NULL ELSE json_build_object('client_id', client.client_id, 'gender', client.gender, 'birth_date', client.birth_date) END), '[]') AS AS clients FROM client;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 207.\n  _id', client.client_id, 'gender', client.gender, 'birth_date', client.birth_date) END), '[]') AS AS \u001b[4mclients\u001b[0m FROM client;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0063,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_140",
+    "db_id": "financial",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "select id, amount as cum_sum, 1 as bucket from transfer where id = 1 union all select transfer.id, (case when cum_sum + amount > 20 then amount else cum_sum + amount end), (case when cum_sum + amount > 20 then bucket + 1 else bucket end) from cte join transfer on transfer.id = cte.id + 1",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'cte' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "cte",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0542,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-UNION",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "SELECT",
+        "UNION",
+        "WHERE"
+      ],
+      "tables": [
+        "cte",
+        "transfer"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_141",
+    "db_id": "formula_1",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT raceid mode() within group(order by laps) as modal_laps FROM results;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 19.\n  SELECT raceid mode\u001b[4m(\u001b[0m) within group(order by laps) as modal_laps FROM results;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_145",
+    "db_id": "european_football_2",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "select id, name, d ->> 'description' as skill from player_skills, json_array_elements(skills) as d;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'name' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "name",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'd' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "d",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'skills' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "skills",
+        "affected_clauses": [
+          "JOIN"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0365,
+      "pattern_signature": "SELECT-FROM-JOIN",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "SELECT"
+      ],
+      "tables": [
+        "player_skills"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_147",
+    "db_id": "thrombosis_prediction",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT COUNT(\"ANA Pattern\") AS c, \"ANA Pattern\", EXTRACT(YEAR FROM \"Examination Date\") AS examination_year FROM examination WHERE EXTRACT(YEAR FROM \"Examination Date\") BETWEEN 1993 AND 1996 GROUP BY EXTRACT(YEAR FROM \"Examination Date\"), \"ANA Pattern\" ORDER BY examination_year, c DESC;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'ANA Pattern' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "ANA Pattern",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'ANA Pattern' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "ANA Pattern",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'ANA Pattern' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "ANA Pattern",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Examination Date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Examination Date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Examination Date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Examination Date",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Examination Date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Examination Date",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.024,
+      "pattern_signature": "SELECT-FROM-WHERE-GROUP-ORDER",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "ORDER",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "examination"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_155",
+    "db_id": "formula_1",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT *\nFROM jsonb_to_record(circuit_id_name) AS x(circuitid int, name text)\nFROM circuit_json;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 3, Col: 4.\n  SELECT *\nFROM jsonb_to_record(circuit_id_name) AS x(circuitid int, name text)\n\u001b[4mFROM\u001b[0m circuit_json;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT-FROM",
+      "clauses_present": [
+        "FROM",
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_158",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT count(*) FROM card_matches INNER JOIN card_players ON card_matches.player1_id = card_players.id OR card_matches.player2_id = card_players.id WHERE card_players.type = 'Pro'",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'type' does not exist in table 'card_players' (referenced as 'card_players.type')",
+        "taxonomy_category": "semantic",
+        "context": "card_players.type",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'player1_id' does not exist in table 'card_matches' (referenced as 'card_matches.player1_id')",
+        "taxonomy_category": "semantic",
+        "context": "card_matches.player1_id",
+        "affected_clauses": [
+          "JOIN"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'player2_id' does not exist in table 'card_matches' (referenced as 'card_matches.player2_id')",
+        "taxonomy_category": "semantic",
+        "context": "card_matches.player2_id",
+        "affected_clauses": [
+          "JOIN"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0708,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_INNER-WHERE",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "JOIN_INNER",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "card_matches",
+        "card_players"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_163",
+    "db_id": "student_club",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT d.the_day AS \"Date\", COUNT(e.event_id) AS \"Number of Events\", AVG(b.remaining) AS \"Avg Remaining Budget\" FROM (SELECT ts::date AS the_day FROM generate_series (timestamp '2020-01-01', timestamp '2020-03-31', interval '1 day'::interval) ts) d LEFT JOIN \"event\" e ON e.event_date::date = d.the_day LEFT JOIN budget b ON b.link_to_event = e.event_id GROUP BY d.the_day ORDER BY d.the_day;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'ts' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "ts",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1646,
+      "pattern_signature": "SELECT-FROM-JOIN-GROUP-ORDER-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY"
+      ],
+      "tables": [
+        "budget",
+        "event"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_169",
+    "db_id": "card_games",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "insert into card_counters (card_name, counters) values ('Lightning Bolt', array[2,0,2,1]) on conflict (card_name) do update set counters = array_agg(unnest(card_counters.counters) + unnest(array[2,0,2,1]))",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'counters' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "counters"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'counters' does not exist in table 'card_counters' (referenced as 'card_counters.counters')",
+        "taxonomy_category": "semantic",
+        "context": "card_counters.counters"
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0167,
+      "pattern_signature": "VALUES-INSERT",
+      "clauses_present": [
+        "INSERT",
+        "VALUES"
+      ],
+      "tables": [
+        "card_counters"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_173",
+    "db_id": "card_games",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "select id, array_agg(elem) from cards, unnest(string_to_array(cards.keywords, ',')::text[]) elem where elem <> all(SELECT unnest(sq.RemoveKeywords) from SelectQuery sq) and id in (61, 65) group by id order by id;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'elem' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "elem",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'elem' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "elem",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0708,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-ORDER",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "cards",
+        "selectquery"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_176",
+    "db_id": "superhero",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE superhero SET total_powers = (SELECT COUNT(power_id) FROM hero_power);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'total_powers' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "total_powers"
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1063,
+      "pattern_signature": "SELECT-FROM-UPDATE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "UPDATE"
+      ],
+      "tables": [
+        "hero_power",
+        "superhero"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_179",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH s as ( SELECT DATE(date_value) as dt, date_value, card_id cid, price FROM card_prices ) SELECT cid, dt, date_value, s.price as second_price FROM s INNER JOIN ( SELECT q.card_id, DATE(q.date_value) as dat FROM card_prices q GROUP BY q.card_id, dat ORDER BY q.card_id ASC ) as end_price ON s.cid = end_price.card_id AND s.date_value = (SELECT date_value FROM s WHERE s.cid = end_price.card_id AND s.dt = end_price.dat LIMIT 1) + interval '15 minutes' ORDER BY cid, dt;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date_value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "date_value",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'date_value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "date_value",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1875,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER-WHERE-GROUP-ORDER-LIMIT-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "JOIN_INNER",
+        "LIMIT",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WITH"
+      ],
+      "tables": [
+        "card_prices",
+        "s"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 2,
+      "num_ctes": 1,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_181",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT timestamp, avg(strength) FROM bond_strength WHERE timestamp >= ('2023-10-01 02:30:00'::timestamp - INTERVAL '1 hour') GROUP BY timestamp, strength",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'strength' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "strength",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'strength' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "strength",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.024,
+      "pattern_signature": "SELECT-FROM-WHERE-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "bond_strength"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_182",
+    "db_id": "card_games",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "select jsonb_set(t.data, '{purchaseurls}',  (select jsonb_agg(case when v.value::text ~ 'tcgplayer' or v.value::text ~ 'cardKingdom' then md5(substring(v.value::text)), jsonb_array_elements(t.data -> 'purchaseurls') v))  from cards_info",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Unbalanced parentheses or brackets",
+        "taxonomy_category": "syntax",
+        "context": "1 unclosed '('"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1,
+      "pattern_signature": "SELECT-FROM-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY"
+      ],
+      "tables": [
+        "cards_info"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_195",
+    "db_id": "california_schools",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT CAST(time_bucket AS DATE) AS time_bucket, rate / DATE_PART('days', time_bucket + INTERVAL '1 month - 1 day') AS daily_rate FROM (SELECT DATE(generate_series(LOWER(time_span)::TIMESTAMP, COALESCE(UPPER(time_span),NOW())::TIMESTAMP, '1 day')) AS time_bucket, rate FROM budgets) AS daily_rates;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'rate' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "rate",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'rate' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "rate",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'time_span' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "time_span",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'time_span' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "time_span",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0896,
+      "pattern_signature": "SELECT-FROM-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY"
+      ],
+      "tables": [
+        "budgets"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_199",
+    "db_id": "california_schools",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "DROP FUNCTION IF EXISTS update_school_inventory_after_supply() CASCADE;CREATE OR REPLACE FUNCTION update_school_inventory_after_supply() RETURNS TRIGGER LANGUAGE plpgsql AS $trigger$ BEGIN UPDATE school_inventory AS i SET NEW.quantity = school_supplies.quantity + OLD.quantity FROM school_supplies WHERE i.cdscode = school_supplies.cdscode; RETURN NEW; END; $trigger$;DROP TRIGGER IF EXISTS trigger_insert_supply ON school_supplies;CREATE TRIGGER trigger_insert_supply AFTER INSERT ON school_supplies",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'update_school_inventory_after_supply' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "update_school_inventory_after_supply",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UNKNOWN",
+      "clauses_present": [],
+      "tables": [
+        "update_school_inventory_after_supply"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_200",
+    "db_id": "california_schools",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT county, AVG(avgscrread + avgscrmath + avgscrwrite) / 3 AS avg_total_sat FROM satscores GROUP BY county ORDER BY avg_total_sat DESC LIMIT 5;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'county' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "county",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'county' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "county",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0167,
+      "pattern_signature": "SELECT-FROM-GROUP-ORDER-LIMIT",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "LIMIT",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "satscores"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_202",
+    "db_id": "european_football_2",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT * FROM match_location WHERE ST_INTERSECTS(location, CIRCLE(POINT(-73.935242, 40.730610), 2));",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'location' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "location",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0177,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "match_location"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_213",
+    "db_id": "superhero",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT superhero_name, performance_date, attribute_name, result FROM superhero_performance PIVOT(result FOR attribute_name IN (Strength, Speed, Intelligence))",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Expecting an aggregation function in PIVOT. Line 1, Col: 103.\n  SELECT superhero_name, performance_date, attribute_name, result FROM superhero_performance PIVOT(\u001b[4mresult\u001b[0m FOR attribute_name IN (Strength, Speed, Intelligence))\n\nRequired keyword: 'this' missing for <class 'sqlglot.expressions.Alias'>. Line 1, Col: 107.\n  CT superhero_name, performance_date, attribute_name, result FROM superhero_performance PIVOT(result \u001b[4mFOR\u001b[0m attribute_name IN (Strength, Speed, Intelligence))",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM",
+      "clauses_present": [
+        "FROM",
+        "SELECT"
+      ],
+      "tables": [
+        "superhero_performance"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_214",
+    "db_id": "thrombosis_prediction",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT COUNT(*) FROM laboratory WHERE date_part('year', date) = date_part('year', CURRENT_DATE) AND date_part('month', date) = date_part('month', CURRENT_DATE) AND date [I don't know what to put here];",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unterminated_string",
+        "message": "Unterminated quoted string",
+        "taxonomy_category": "syntax",
+        "context": "Error tokenizing 'NT_DATE) AND date [I don't know what to put here]'"
+      }
+    ],
+    "tags": [
+      "syntax_unterminated_string"
+    ]
+  },
+  {
+    "instance_id": "PostgreSQL_218",
+    "db_id": "financial",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE card SET type = ( SELECT type, client_id FROM disp WHERE card.disp_id = disp.disp_id );",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'type' is ambiguous \u2014 exists in tables: card, disp",
+        "taxonomy_category": "semantic",
+        "context": "type"
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'type' is ambiguous \u2014 exists in tables: card, disp",
+        "taxonomy_category": "semantic",
+        "context": "type",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1073,
+      "pattern_signature": "SELECT-FROM-WHERE-UPDATE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "UPDATE",
+        "WHERE"
+      ],
+      "tables": [
+        "card",
+        "disp"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_222",
+    "db_id": "esophageal",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT coalesce(_agg(patients), '[]'::) as patients, coalesce(_agg(doctors), '[]'::) as doctors, coalesce(_agg(appointments), '[]'::) as appointments FROM (SELECT * FROM patients) AS patients, (SELECT * FROM doctors) AS doctors, (SELECT * FROM appointments) AS appointments;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Expected type. Line 1, Col: 39.\n  SELECT coalesce(_agg(patients), '[]'::\u001b[4m)\u001b[0m as patients, coalesce(_agg(doctors), '[]'::) as doctors, coalesce(_agg(appointments), '[]'::) as ap\n\nRequired keyword: 'to' missing for <class 'sqlglot.expressions.Cast'>. Line 1, Col: 39.\n  SELECT coalesce(_agg(patients), '[]'::\u001b[4m)\u001b[0m as patients, coalesce(_agg(doctors), '[]'::) as doctors, coalesce(_agg(appointments), '[]'::) as ap\n\nExpected type. Line 1, Col: 84.\n  SELECT coalesce(_agg(patients), '[]'::) as patients, coalesce(_agg(doctors), '[]'::\u001b[4m)\u001b[0m as doctors, coalesce(_agg(appointments), '[]'::) as appointments FROM (SELECT * FROM patients) AS p\n\n... and 3 more",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2292,
+      "pattern_signature": "SELECT-FROM-JOIN-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY"
+      ],
+      "tables": [
+        "appointments",
+        "doctors",
+        "patients"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 3,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_223",
+    "db_id": "esophageal",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE patients_info\nSET general_info = jsonb_set(general_info, '{accept_appointments}', '\"false\"');",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'general_info' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "general_info"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'general_info' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "general_info"
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UPDATE",
+      "clauses_present": [
+        "UPDATE"
+      ],
+      "tables": [
+        "patients_info"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_236",
+    "db_id": "erolp",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT learner_code, engagement_history FROM learners_array;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'engagement_history' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "engagement_history",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM",
+      "clauses_present": [
+        "FROM",
+        "SELECT"
+      ],
+      "tables": [
+        "learners_array"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_239",
+    "db_id": "erolp",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT learner_code, CASE WHEN Geographic_Location = 'Urban' THEN 1 WHEN Geographic_Location = 'Rural' THEN 2 ELSE 0 END AS location_id, AVG(Pre_Test_Score) AS average_pre_test_score FROM learners WHERE Engagement_History > 5 AND Gender = 'Female' AND Language_Proficiency IN ('Basic', 'Intermediate') AND CASE WHEN ${socio_status} IN ('Low', 'Middle') THEN Geographic_Location = 'Urban' WHEN ${socio_status} = 'High' THEN Geographic_Location = 'Rural' END;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Required keyword: 'this' missing for <class 'sqlglot.expressions.Parameter'>. Line 1, Col: 318.\n  tory > 5 AND Gender = 'Female' AND Language_Proficiency IN ('Basic', 'Intermediate') AND CASE WHEN $\u001b[4m{\u001b[0msocio_status} IN ('Low', 'Middle') THEN Geographic_Location = 'Urban' WHEN ${socio_status} = 'High' \n\nRequired keyword: 'this' missing for <class 'sqlglot.expressions.Parameter'>. Line 1, Col: 395.\n  diate') AND CASE WHEN ${socio_status} IN ('Low', 'Middle') THEN Geographic_Location = 'Urban' WHEN $\u001b[4m{\u001b[0msocio_status} = 'High' THEN Geographic_Location = 'Rural' END;",
+        "taxonomy_category": "syntax"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Pre_Test_Score' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Pre_Test_Score",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0552,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "learners"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_250",
+    "db_id": "spotify",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT * FROM sp_album_ctb WHERE (alb, art, feat_arts, start_date) IN (SELECT alb, art, feat_arts, end_date + INTERVAL '1 day' FROM sp_album_ctb);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'start_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "start_date",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'end_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "end_date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0969,
+      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "sp_album_ctb"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_253",
+    "db_id": "global_atlas",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT * FROM city ORDER BY COALESCE(SUBSTRING(name FROM '[A-Z]+'), ''), COALESCE(SUBSTRING(name FROM '(?<=-)[0-9]+')::INTEGER, 0), COALESCE(SUBSTRING(name FROM '(?<=\\()[0-9]+')::BIGINT, 0)\uff1b",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 190.\n  NG(name FROM '(?<=-)[0-9]+')::INTEGER, 0), COALESCE(SUBSTRING(name FROM '(?<=\\()[0-9]+')::BIGINT, 0)\u001b[4m\uff1b\u001b[0m",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM-ORDER",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "city"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_260",
+    "db_id": "erolp",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT * FROM orders WHERE customer_id = 1 OR product_id = 'P202'",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'customer_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "customer_id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'product_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "product_id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0281,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "orders"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_266",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH t1 AS ( SELECT e.event_id FROM event e LEFT JOIN attendance a ON e.event_id = a.link_to_event ), t2 AS ( SELECT e.event_id FROM event e INNEr JOIN attendance a ON e.event_id = a.link_to_event)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Failed to parse any statement following CTE. Line 1, Col: 197.\n  nt ), t2 AS ( SELECT e.event_id FROM event e INNEr JOIN attendance a ON e.event_id = a.link_to_event\u001b[4m)\u001b[0m",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1188,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-JOIN_INNER",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "JOIN",
+        "JOIN_INNER",
+        "SELECT",
+        "WITH"
+      ],
+      "tables": [
+        "attendance",
+        "event"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_272",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELEC Player.player_api_id, Player.player_name, Player_Attributes.overall_rating FROM player LEFT JOIN player_attributes ON Player.player_api_id = Player_Attributes.player_api_id WHERE Player_Attributes.overall_rating = 68",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 13.\n  SELEC Player\u001b[4m.\u001b[0mplayer_api_id, Player.player_name, Player_Attributes.overall_rating FROM player LEFT JOIN player_att",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "UNKNOWN",
+      "clauses_present": [],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_282",
+    "db_id": "card_games",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT id, (CASE WHEN (colors = 'W' and power = '4') THEN coalesce(watermark, '996') watermark WHEN (colors = 'B' and power = '3') THEN coalesce(watermark, '997') watermark WHEN (colors = 'U' and power = '2') THEN coalesce(watermark, '998') watermark WHEN (colors = 'R' and power = '0') THEN coalesce(watermark, '999') watermark END) watermark FROM cards",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expected END after CASE. Line 1, Col: 84.\n  SELECT id, (CASE WHEN (colors = 'W' and power = '4') THEN coalesce(watermark, '996'\u001b[4m)\u001b[0m watermark WHEN (colors = 'B' and power = '3') THEN coalesce(watermark, '997') watermark WHEN (color\n\nExpecting ). Line 1, Col: 99.\n  SELECT id, (CASE WHEN (colors = 'W' and power = '4') THEN coalesce(watermark, '996') watermark \u001b[4mWHEN\u001b[0m (colors = 'B' and power = '3') THEN coalesce(watermark, '997') watermark WHEN (colors = 'U' and pow\n\nInvalid expression / Unexpected token. Line 1, Col: 99.\n  SELECT id, (CASE WHEN (colors = 'W' and power = '4') THEN coalesce(watermark, '996') watermark \u001b[4mWHEN\u001b[0m (colors = 'B' and power = '3') THEN coalesce(watermark, '997') watermark WHEN (colors = 'U' and pow",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_284",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT link_to_member, COUNT(DISTINCT DATE(event_date)) AS total_attendance_days FROM attendance JOIN event ON attendance.link_to_event = event.event_id WHERE event_date BETWEEN '2019-01-01' AND '2023-12-31' GROUP BY link_to_member [split] WITH cte AS ( SELECT link_to_member, DATE(event_date) AS event_day, ROW_NUMBER() OVER (PARTITION BY link_to_member ORDER BY DATE(event_date)) AS rn FROM attendance JOIN event ON attendance.link_to_event = event.event_id WHERE event_date BETWEEN '2019-01-01' AN",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 244.\n  ent.event_id WHERE event_date BETWEEN '2019-01-01' AND '2023-12-31' GROUP BY link_to_member [split] \u001b[4mWITH\u001b[0m cte AS ( SELECT link_to_member, DATE(event_date) AS event_day, ROW_NUMBER() OVER (PARTITION BY link",
+        "taxonomy_category": "syntax"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'split' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "split",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0604,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "attendance",
+        "event"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_291",
+    "db_id": "thrombosis_prediction",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT pt.id, pt.sex, pt.birthday, ex.diagnosis FRM patient pt, examination ex WHERE pt.id = (SELECT ex.id FROM examination ex WHERE ex.diagnosis = 'SLE' AND ex.\"aCL IgG\" > 3.0)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 59.\n  SELECT pt.id, pt.sex, pt.birthday, ex.diagnosis FRM \u001b[4mpatient\u001b[0m pt, examination ex WHERE pt.id = (SELECT ex.id FROM examination ex WHERE ex.diagnosis = 'SLE' AND e",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_293",
+    "db_id": "european_football_2",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE league l SET name = concat('abc', ',', name) FROM country c WHERE l.country_id = c.id GROUP BY l.country_id HAVING l.country_id > 1000;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 101.\n  UPDATE league l SET name = concat('abc', ',', name) FROM country c WHERE l.country_id = c.id \u001b[4mGROUP BY\u001b[0m l.country_id HAVING l.country_id > 1000;",
+        "taxonomy_category": "syntax"
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'name' is ambiguous \u2014 exists in tables: league, country",
+        "taxonomy_category": "semantic",
+        "context": "name"
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'name' is ambiguous \u2014 exists in tables: league, country",
+        "taxonomy_category": "semantic",
+        "context": "name"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token",
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0281,
+      "pattern_signature": "FROM-WHERE-UPDATE",
+      "clauses_present": [
+        "FROM",
+        "UPDATE",
+        "WHERE"
+      ],
+      "tables": [
+        "country",
+        "league"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_299",
+    "db_id": "financial",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT 5 AS RATES, COUNT(A8) FROM district WHERE A8 = 5 [split] SELECT 5 AS RATES, COUNT(A9) FROM district WHERE A9 = 5 [split] SELECT 4 AS RATES, COUNT(A8) FROM district WHERE A8 = 4 [split] SELECT 4 AS RATES, COUNT(A9) FROM district WHERE A9 = 4 [split] SELECT 3 AS RATES, COUNT(A8) FROM district WHERE A8 = 3 [split] SELECT 3 AS RATES, COUNT(A9) FROM district WHERE A9 = 3",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 70.\n  SELECT 5 AS RATES, COUNT(A8) FROM district WHERE A8 = 5 [split] \u001b[4mSELECT\u001b[0m 5 AS RATES, COUNT(A9) FROM district WHERE A9 = 5 [split] SELECT 4 AS RATES, COUNT(A8) FROM district",
+        "taxonomy_category": "syntax"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'split' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "split",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.024,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "district"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_305",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT * FROM budget GROUP BY link_to_event WHEN event_status = 'Closed' THEN 'Closed' WHEN event_status = 'Open' AND event_status = 'Planning' THEN 'Open' WHEN event_status = 'Open' THEN 'Open' WHEN event_status = 'Planning' THEN 'Planning' ELSE 'Unknown' END;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 48.\n  SELECT * FROM budget GROUP BY link_to_event \u001b[4mWHEN\u001b[0m event_status = 'Closed' THEN 'Closed' WHEN event_status = 'Open' AND event_status = 'Planning' THEN",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "SELECT"
+      ],
+      "tables": [
+        "budget"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_307",
+    "db_id": "card_games",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY (SELECT MAX(\"Update_Time\") FROM cards) NULLS FIRST",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'table_name' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "table_name",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'table_schema' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "table_schema",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Update_Time' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Update_Time",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1135,
+      "pattern_signature": "SELECT-FROM-WHERE-ORDER-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "cards",
+        "tables"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_310",
+    "db_id": "codebase_community",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE ?? = REPLACE(??, 'http://stackoverflow.com', 'https://stackoverflow.com');",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Expected table name but got <Token token_type: TokenType.DQMARK, text: ??, line: 1, col: 9, start: 7, end: 8, comments: []>. Line 1, Col: 9.\n  UPDATE \u001b[4m??\u001b[0m = REPLACE(??, 'http://stackoverflow.com', 'https://stackoverflow.com');\n\nInvalid expression / Unexpected token. Line 1, Col: 9.\n  UPDATE \u001b[4m??\u001b[0m = REPLACE(??, 'http://stackoverflow.com', 'https://stackoverflow.com');",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "UPDATE",
+      "clauses_present": [
+        "UPDATE"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_311",
+    "db_id": "card_games",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "CREATE TABLE content (id serial PRIMARY KEY NOT NULL, item_id int NOT NULL, nested_item_id int, block_id int, \"order\" int NOT NULL, CONSTRAINT not_own_parent CHECK nested_item_id <> id)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Required keyword: 'expressions' missing for <class 'sqlglot.expressions.Constraint'>. Line 1, Col: 163.\n  _id int NOT NULL, nested_item_id int, block_id int, \"order\" int NOT NULL, CONSTRAINT not_own_parent \u001b[4mCHECK\u001b[0m nested_item_id <> id)\n\nExpecting ). Line 1, Col: 163.\n  _id int NOT NULL, nested_item_id int, block_id int, \"order\" int NOT NULL, CONSTRAINT not_own_parent \u001b[4mCHECK\u001b[0m nested_item_id <> id)",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "UNKNOWN",
+      "clauses_present": [],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_313",
+    "db_id": "card_games",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "INSERT INTO rulings (date, text, uuid) SELECT t.col1, t.col2, t.col3 FROM (SELECT '2023-01-01' AS col1, 'Some ruling text.' AS col2, (SELECT uuid FROM cards WHERE borderColor = 'black' AND layout = 'normal') AS col3 UNION ALL SELECT '2023-01-02' AS col1, 'Another ruling text.' AS col2, (SELECT uuid FROM cards WHERE isAlternative = 1) AS col3) t WHERE NOT EXISTS (SELECT 1 FROM rulings WHERE rulings.date = t.col1::date);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: rulings, cards",
+        "taxonomy_category": "semantic",
+        "context": "uuid",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'uuid' is ambiguous \u2014 exists in tables: rulings, cards",
+        "taxonomy_category": "semantic",
+        "context": "uuid",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2521,
+      "pattern_signature": "SELECT-FROM-WHERE-UNION-INSERT-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "INSERT",
+        "SELECT",
+        "SUBQUERY",
+        "UNION",
+        "WHERE"
+      ],
+      "tables": [
+        "cards",
+        "rulings"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 3,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_317",
+    "db_id": "codebase_community",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT humidity_level, (humidity_level - LAG(humidity_level, 1) OVER (ORDER BY record_id NULLS FIRST)) AS diff FROM warehouse_humidity WHERE diff = 0 OR diff > 10",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'warehouse_humidity' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "warehouse_humidity",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0344,
+      "pattern_signature": "SELECT-FROM-WHERE-WINDOW-ORDER",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "WHERE",
+        "WINDOW"
+      ],
+      "tables": [
+        "warehouse_humidity"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_318",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT s.member_id FROM members AS s WHERE s.position = 'Member' AND s.email @@ angela.sanders@lpu.edu;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 1, Col: 95.\n  SELECT s.member_id FROM members AS s WHERE s.position = 'Member' AND s.email @@ angela.sanders\u001b[4m@\u001b[0mlpu.edu;",
+        "taxonomy_category": "syntax"
+      },
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'members' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "members",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token",
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0281,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "members"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_332",
+    "db_id": "codebase_community",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT CASE WHEN amount_sold < 1000 THEN 'Under 1000' WHEN amount_sold BETWEEN 1000 AND 9999 THEN '1000 to 9999' WHEN amount_sold BETWEEN 10000 AND 49999 THEN '10000 to 49999' WHEN amount_sold >= 50000 THEN '50000 and above' END AS range, AVG(Count) AS avg FROM sales_data GROUP BY range",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'sales_data' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "sales_data",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0167,
+      "pattern_signature": "SELECT-FROM-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "SELECT"
+      ],
+      "tables": [
+        "sales_data"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_336",
+    "db_id": "thrombosis_prediction",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "SET list = (SELECT id FROM patient WHERE sex = 'F' AND id < 40000);",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'list' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "list"
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1073,
+      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "patient"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_339",
+    "db_id": "card_games",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT p.id, p.name, c.item, c.size FROM packages p LEFT JOIN contents c ON (c.packageid=p.id) WHERE (( p.id IN ( SELECT packageid FROM contents WHERE item='square' AND size='A' ) AND ( p.id IN ( SELECT packageid FROM contents WHERE item='circle' AND size='B' )) GROUP BY p.id HAVING ( SELECT COUNT(*) FROM contents WHERE packageid=p.id ) = 2;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Unbalanced parentheses or brackets",
+        "taxonomy_category": "syntax",
+        "context": "2 unclosed '('"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2667,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-HAVING-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "HAVING",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "contents",
+        "packages"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 3,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_349",
+    "db_id": "codebase_community",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "SELECT\n  id,\n  displayname,\n  age,\n  SUM(date_part('day', lastaccessdate - creationdate) + 1) - [subtract holidays] AS TotalDays\nFROM\n  users\nGROUP BY\n  displayname, age\nORDER BY\n  users.id;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Expected ]. Line 5, Col: 79.\n  \n  id,\n  displayname,\n  age,\n  SUM(date_part('day', lastaccessdate - creationdate) + 1) - [subtract \u001b[4mholidays\u001b[0m] AS TotalDays\nFROM\n  users\nGROUP BY\n  displayname, age\nORDER BY\n  users.id;\n\nInvalid expression / Unexpected token. Line 5, Col: 80.\n   displayname,\n  age,\n  SUM(date_part('day', lastaccessdate - creationdate) + 1) - [subtract holidays\u001b[4m]\u001b[0m AS TotalDays\nFROM\n  users\nGROUP BY\n  displayname, age\nORDER BY\n  users.id;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0063,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_358",
+    "db_id": "student_club",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT b.\"event_id\", b.\"amount\", b.\"link_to_member\", \"link_to_event\" FROM event AS b JOIN budget AS b ON b.\"event_id\" = b.\"link_to_event\" LEFT JOIN attendance AS b ON b.\"event_id\" = b.\"link_to_event\" ORDER BY b.\"event_id\" NULLS FIRST",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'link_to_event' is ambiguous \u2014 exists in tables: budget, attendance",
+        "taxonomy_category": "semantic",
+        "context": "link_to_event",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0833,
+      "pattern_signature": "SELECT-FROM-JOIN-ORDER",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "attendance",
+        "budget",
+        "event"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_359",
+    "db_id": "superhero",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "CREATE FUNCTION check_alignment(alignment_name VARCHAR) RETURNS VARCHAR(1) AS $$ BEGIN RETURN CASE WHEN alignment_name LIKE '%Good%' THEN 'Y' ELSE 'N' END",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_error",
+        "message": "Error tokenizing 'alignment_name LIKE '%Good%' THEN 'Y' ELSE 'N' EN'",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_error"
+    ]
+  },
+  {
+    "instance_id": "PostgreSQL_366",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH molecule_atoms AS (\n    SELECT m.molecule_id, m.label, a.atom_id, a.element,\n           ROW_NUMBER() OVER (PARTITION BY m.molecule_id ORDER BY a.atom_id NULLS FIRST) AS atom_seq\n    FROM molecule AS m\n    LEFT JOIN atom AS a ON m.molecule_id = a.molecule_id\n),\nmolecule_bonds AS (\n    SELECT b.molecule_id, b.bond_id, b.bond_type,\n           c.atom_id AS source_atom, c.atom_id2 AS target_atom,\n           DENSE_RANK() OVER (PARTITION BY b.molecule_id ORDER BY b.bond_id NULLS FIRST) AS bond_ran",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'molecule_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "molecule_id",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2427,
+      "pattern_signature": "WITH-CTE-SELECT-DISTINCT-FROM-JOIN-JOIN_CROSS-WHERE-WINDOW-UNION-ORDER",
+      "clauses_present": [
+        "CTE",
+        "DISTINCT",
+        "FROM",
+        "JOIN",
+        "JOIN_CROSS",
+        "ORDER",
+        "SELECT",
+        "UNION",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "atom",
+        "atom_connections",
+        "bond",
+        "connected",
+        "molecule",
+        "molecule_atoms",
+        "molecule_bonds"
+      ],
+      "num_joins": 3,
+      "num_subqueries": 0,
+      "num_ctes": 3,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_370",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH atom_stats AS (\n    SELECT a.molecule_id, COUNT(a.atom_id) AS atom_count,\n           STRING_AGG(a.element, ',' ORDER BY a.atom_id NULLS FIRST) AS elements\n    FROM atom AS a\n    GROUP BY a.molecule_id\n),\nbond_hierarchy AS (\n    SELECT bond_id, molecule_id, bond_type,\n           SUBSTRING(bond_id FROM '^[^_]+') AS molecule_prefix,\n           CAST(SUBSTRING(bond_id FROM '[^_]+' FOR 1) AS DOUBLE PRECISION) AS first_atom_num,\n           CAST(SUBSTRING(bond_id FROM '[^_]+$') AS DOUBLE PRECISION)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'molecule_id' is ambiguous \u2014 exists in tables: atom, bond, molecule",
+        "taxonomy_category": "semantic",
+        "context": "molecule_id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.4229,
+      "pattern_signature": "WITH-CTE-SELECT-DISTINCT-FROM-JOIN-JOIN_INNER-WHERE-GROUP-WINDOW-ORDER-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "DISTINCT",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "JOIN_INNER",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "atom",
+        "atom_stats",
+        "bond",
+        "bond_hierarchy",
+        "connected",
+        "molecule",
+        "molecule_connectivity"
+      ],
+      "num_joins": 8,
+      "num_subqueries": 1,
+      "num_ctes": 3,
+      "num_aggregations": 6
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_373",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT m.\"molecule_id\",\n       COUNT(a.\"atom_id\") / COUNT(DISTINCT b.\"bond_id\") AS result\nFROM \"molecule\" m\nINNER JOIN \"atom\" a ON m.\"molecule_id\" = a.\"molecule_id\"\nINNER JOIN \"connected\" c ON a.\"atom_id\" = c.\"atom_id\"\nINNER JOIN \"bond\" b ON c.\"bond_id\" = b.\"bond_id\"\nGROUP BY m.\"molecule_id\" INTO :result_variable",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 7, Col: 29.\n  a.\"atom_id\" = c.\"atom_id\"\nINNER JOIN \"bond\" b ON c.\"bond_id\" = b.\"bond_id\"\nGROUP BY m.\"molecule_id\" \u001b[4mINTO\u001b[0m :result_variable",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1323,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_INNER-GROUP",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "JOIN_INNER",
+        "SELECT"
+      ],
+      "tables": [
+        "atom",
+        "bond",
+        "connected",
+        "molecule"
+      ],
+      "num_joins": 3,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_381",
+    "db_id": "student_club",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT e.\"event_id\", e.\"event_name\", e.\"event_date\", e.\"type\",\n(SELECT MAX(CAST(column_value AS timestamp)) AS latest_event_date FROM (VALUES (e.\"event_date\")) AS value_table(column_value)\nWHERE column_value IS NOT NULL) AS latest_event_date FROM \"event\" e",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'column_value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "column_value",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'column_value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "column_value",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1031,
+      "pattern_signature": "SELECT-FROM-WHERE-VALUES-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "VALUES",
+        "WHERE"
+      ],
+      "tables": [
+        "event"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_382",
+    "db_id": "student_club",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT\n    TO_CHAR(type) AS event_type,\n    COUNT(CASE WHEN EXTRACT(YEAR FROM event_date::timestamp) = recent_year THEN 1 END) -\n    COUNT(CASE WHEN EXTRACT(YEAR FROM event_date::timestamp) = oldest_year THEN 1 END) AS year_difference\nFROM event,\n    (\n        SELECT\n            MAX(EXTRACT(YEAR FROM event_date::timestamp)) AS recent_year,\n            MIN(EXTRACT(YEAR FROM event_date::timestamp)) AS oldest_year\n        FROM event\n    ) year_range\nGROUP BY TO_CHAR(type), recent_year, oldest_year;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Required keyword: 'format' missing for <class 'sqlglot.expressions.TimeToStr'>. Line 2, Col: 17.\n  SELECT\n    TO_CHAR(type\u001b[4m)\u001b[0m AS event_type,\n    COUNT(CASE WHEN EXTRACT(YEAR FROM event_date::timestamp) = recent_year THEN 1 EN\n\nRequired keyword: 'format' missing for <class 'sqlglot.expressions.TimeToStr'>. Line 12, Col: 22.\n  ROM event_date::timestamp)) AS oldest_year\n        FROM event\n    ) year_range\nGROUP BY TO_CHAR(type\u001b[4m)\u001b[0m, recent_year, oldest_year;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1406,
+      "pattern_signature": "SELECT-FROM-JOIN-GROUP-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY"
+      ],
+      "tables": [
+        "event"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 4
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_387",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH\n\n    set_a (molecule_id, element_count) AS (\n        SELECT molecule_id, COUNT(DISTINCT element)\n        FROM atom\n        GROUP BY molecule_id\n        HAVING COUNT(DISTINCT element) > 1\n    ),\n    set_b (molecule_id, element_count) AS (\n        SELECT m.molecule_id, COUNT(DISTINCT a.element)\n        FROM molecule m\n        JOIN atom a ON m.molecule_id = a.molecule_id\n        WHERE m.label IS NOT NULL\n        GROUP BY m.molecule_id\n    ),\n\n    unique_a (molecule_id, element_count, rn, densi",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'bond_id' is ambiguous \u2014 exists in tables: bond, connected",
+        "taxonomy_category": "semantic",
+        "context": "bond_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'element_count' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "element_count",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.5177,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-HAVING-WINDOW-UNION-ORDER-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "HAVING",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "UNION",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "atom",
+        "bond",
+        "connected",
+        "molecule",
+        "molecule_hierarchy",
+        "set_a",
+        "set_b",
+        "unique_a",
+        "unique_b"
+      ],
+      "num_joins": 6,
+      "num_subqueries": 2,
+      "num_ctes": 5,
+      "num_aggregations": 12
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_390",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH match_dates AS\n  (SELECT \"id\",\n          TO_DATE(\"date\", 'YYYY-MM-DD HH24:MI:SS') AS match_date,\n          TO_CHAR(TO_DATE(\"date\", 'YYYY-MM-DD HH24:MI:SS'), 'fmDay', 'English') AS day_of_week,\n          TO_DATE(\"date\", 'YYYY-MM-DD HH24:MI:SS') AS match_start_time,\n          TO_DATE(\"date\", 'YYYY-MM-DD HH24:MI:SS') + INTERVAL '2 HOUR' AS match_end_time\n   FROM \"match\")\nSELECT m.*,\n       ROUND(GREATEST(LEAST(m.match_end_time, m.match_date + INTERVAL '17:00:00' HOUR TO SECOND) - GREATEST(m.ma",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_table",
+        "message": "Table 'DBA_VIEWS' does not exist in schema",
+        "taxonomy_category": "semantic",
+        "context": "DBA_VIEWS",
+        "affected_clauses": [
+          "FROM"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_table"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1281,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WITH"
+      ],
+      "tables": [
+        "dba_views",
+        "match",
+        "match_dates"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 1,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_392",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT \"home_team_api_id\" AS \"team_api_id\",\n       \"start_date\",\n       \"end_date\",\n       \"match_count\"\nFROM \"match\" MATCH_RECOGNIZE (PARTITION BY \"country_id\"\n                              ORDER BY \"date\" MEASURES FIRST(\"date\") AS \"start_date\", LAST(\"date\") AS \"end_date\", COUNT(*) AS \"match_count\" PATTERN (consecutive_wins+) DEFINE consecutive_wins AS \"league_id\" = 'EUROPEAN_FOOTBALL_2')",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 6, Col: 38.\n  \"match_count\"\nFROM \"match\" MATCH_RECOGNIZE (PARTITION BY \"country_id\"\n                              \u001b[4mORDER BY\u001b[0m \"date\" MEASURES FIRST(\"date\") AS \"start_date\", LAST(\"date\") AS \"end_date\", COUNT(*) AS \"match_count\n\nInvalid expression / Unexpected token. Line 6, Col: 54.\n  OM \"match\" MATCH_RECOGNIZE (PARTITION BY \"country_id\"\n                              ORDER BY \"date\" \u001b[4mMEASURES\u001b[0m FIRST(\"date\") AS \"start_date\", LAST(\"date\") AS \"end_date\", COUNT(*) AS \"match_count\" PATTERN (conse",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'start_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "start_date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'end_date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "end_date",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'match_count' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "match_count",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "SELECT-FROM-ORDER",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "match"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_404",
+    "db_id": "california_schools",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT \"valid_from\",\n       \"valid_until\",\n       \"count\"\nFROM\n  (SELECT \"dt\" AS \"valid_from\",\n          LEAD(\"dt\") OVER (\n                           ORDER BY \"dt\") - INTERVAL '1' SECOND AS \"valid_until\",\n          SUM(\"count\" * \"type\") OVER (\n                                      ORDER BY \"dt\") AS \"count\"\n   FROM\n     (SELECT \"valid_from\",\n             \"valid_until\" + INTERVAL '1 DAY' AS \"valid_until\",\n             1 AS \"count\"\n      FROM\n        (SELECT TO_DATE('2014-01-01', 'YYYY-MM-DD') AS \"",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'dt' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "dt",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'dt' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "dt",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'type' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "type",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'dt' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "dt",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'dt' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "dt",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2885,
+      "pattern_signature": "SELECT-FROM-WHERE-WINDOW-UNION-ORDER-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "UNION",
+        "WHERE",
+        "WINDOW"
+      ],
+      "tables": [
+        "schools"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 3,
+      "num_ctes": 0,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_411",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH team_speed_stats AS (\n    SELECT\n        team_api_id,\n        date,\n        buildupplayspeed,\n        ROW_NUMBER() OVER (PARTITION BY team_api_id ORDER BY date DESC) as rn,\n        AVG(buildupplayspeed) OVER (PARTITION BY buildupplayspeedclass) as class_avg_speed\n    FROM team_attributes\n),\nmatch_details AS (\n    SELECT\n        m.id,\n        m.date,\n        m.home_team_api_id,\n        m.away_team_api_id,\n        m.home_team_goal,\n        m.away_team_goal,\n        t.team_long_name as home_te",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'home_team_api_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "home_team_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'away_team_api_id' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "away_team_api_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'home_team_goal' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "home_team_goal",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'away_team_goal' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "away_team_goal",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'home_team_goal' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "home_team_goal",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'away_team_goal' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "away_team_goal",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.499,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-HAVING-WINDOW-ORDER-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "HAVING",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "match",
+        "match_details",
+        "team",
+        "team_attributes",
+        "team_speed_stats"
+      ],
+      "num_joins": 5,
+      "num_subqueries": 4,
+      "num_ctes": 2,
+      "num_aggregations": 5
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_412",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "with lose_agg as\n  (select team_api_id,\n          sum(case\n                  when extract(year from to_date(date, 'YYYY-MM-DD HH24:MI:SS')) = 2011 then defencepressure\n              end) as lose_5,\n          sum(case\n                  when extract(year from to_date(date, 'YYYY-MM-DD HH24:MI:SS')) = 2012 then defencepressure\n              end) as lose_10\n   from team_attributes\n   group by team_api_id),\n     profit_agg as\n  (select team_api_id,\n          sum(case\n                  when extract(ye",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 29, Col: 6.\n   join profit_agg p on l.team_api_id = p.team_api_id\norder by coalesce(p.team_api_id, l.team_api_id)\n\u001b[4mselect\u001b[0m extract(year from to_date(date, 'YYYY-MM-DD HH24:MI:SS')) as year\nfrom team_attributes\nwhere date =",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1281,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-GROUP-ORDER",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "WITH"
+      ],
+      "tables": [
+        "lose_agg",
+        "profit_agg",
+        "team_attributes"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 4
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_417",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT XMLSERIALIZE(DOCUMENT XMLELEMENT(NAME \"files\", XMLAGG(XMLELEMENT(NAME \"file\", XMLFOREST(\"id\" AS \"id\", \"team_long_name\" AS \"team_long_name\"))\n                                                        ORDER BY \"team_long_name\" COLLATE \"fr_FR\")) INDENT SIZE = 2) AS result\nFROM \"team\"\nWHERE \"id\" IN\n    (SELECT \"id\"\n     FROM \"team_attributes\"\n     WHERE \"date\" IS NULL)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 1, Col: 39.\n  SELECT XMLSERIALIZE(DOCUMENT \u001b[4mXMLELEMENT\u001b[0m(NAME \"files\", XMLAGG(XMLELEMENT(NAME \"file\", XMLFOREST(\"id\" AS \"id\", \"team_long_name\" AS \"team_long\n\nInvalid expression / Unexpected token. Line 1, Col: 40.\n  SELECT XMLSERIALIZE(DOCUMENT XMLELEMENT\u001b[4m(\u001b[0mNAME \"files\", XMLAGG(XMLELEMENT(NAME \"file\", XMLFOREST(\"id\" AS \"id\", \"team_long_name\" AS \"team_long_",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0,
+      "pattern_signature": "SELECT",
+      "clauses_present": [
+        "SELECT"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_421",
+    "db_id": "european_football_2",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH \"my_table\" AS\n  (SELECT 'A' AS \"cto\",\n          1 AS \"nif\",\n          'A1' AS \"file_\",\n          5 AS \"filesize\"\n   UNION ALL SELECT 'A' AS \"cto\",\n                    1 AS \"nif\",\n                    'A2' AS \"file_\",\n                    3 AS \"filesize\"\n   UNION ALL SELECT 'A' AS \"cto\",\n                    2 AS \"nif\",\n                    'A3' AS \"file_\",\n                    2 AS \"filesize\"\n   UNION ALL SELECT 'A' AS \"cto\",\n                    2 AS \"nif\",\n                    'A4' AS \"file_\",\n ",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 38, Col: 46.\n  ize\"\n   FROM \"my_table\" t) MATCH_RECOGNIZE(PARTITION BY \"cto\"\n                                      \u001b[4mORDER BY\u001b[0m \"rn\" MEASURES MATCH_NUMBER() AS \"mn\", SUM(\"filesize\") AS \"total_size\" ALL ROWS PER MATCH PATTERN ((\n\nInvalid expression / Unexpected token. Line 38, Col: 60.\n  my_table\" t) MATCH_RECOGNIZE(PARTITION BY \"cto\"\n                                      ORDER BY \"rn\" \u001b[4mMEASURES\u001b[0m MATCH_NUMBER() AS \"mn\", SUM(\"filesize\") AS \"total_size\" ALL ROWS PER MATCH PATTERN ((same_nif* nif)",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0958,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-WINDOW-UNION-ORDER-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "UNION",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "my_table"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 1,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_425",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT \"molecule\".\"molecule_id\",\n      \"molecule\".\"label\",\n      \"atom\".\"atom_id\",\n      \"atom\".\"element\",\n      \"bond\".\"bond_id\",\n      \"bond\".\"bond_type\",\n      \"connected\".\"atom_id2\"\nFROM \"molecule\"\nINNER JOIN \"atom\" ON \"molecule\".\"molecule_id\" = \"atom\".\"molecule_id\"\nINNER JOIN \"connected\" ON \"atom\".\"atom_id\" = \"connected\".\"atom_id\"\nINNER JOIN \"bond\" ON \"connected\".\"bond_id\" = \"bond\".\"bond_id\"\nORDER BY \"molecule\".\"molecule_id\",\n         \"atom\".\"atom_id\"\n         \"connected\".\"atom_id2\";",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 14, Col: 20.\n  .\"bond_id\" = \"bond\".\"bond_id\"\nORDER BY \"molecule\".\"molecule_id\",\n         \"atom\".\"atom_id\"\n         \u001b[4m\"connected\"\u001b[0m.\"atom_id2\";",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1198,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_INNER-ORDER",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "JOIN_INNER",
+        "ORDER",
+        "SELECT"
+      ],
+      "tables": [
+        "atom",
+        "bond",
+        "connected",
+        "molecule"
+      ],
+      "num_joins": 3,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_426",
+    "db_id": "california_schools",
+    "category": "Management",
+    "sql_index": 0,
+    "sql": "UPDATE \"frpm\" AS target\n    \"Charter School (Y/N)\" = 1000\n   FROM (\n       SELECT DISTINCT \"cdscode\"\n       FROM \"frpm\"\n       WHERE \"Percent (%) Eligible Free (K-12)\" >= 0.5\n   ) AS source\n   WHERE target.\"cdscode\" = source.\"cdscode\";",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 2, Col: 26.\n  UPDATE \"frpm\" AS target\n    \u001b[4m\"Charter School (Y/N)\"\u001b[0m = 1000\n   FROM (\n       SELECT DISTINCT \"cdscode\"\n       FROM \"frpm\"\n       WHERE \"Percent (%) Elig",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0104,
+      "pattern_signature": "UPDATE",
+      "clauses_present": [
+        "UPDATE"
+      ],
+      "tables": [
+        "frpm"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_430",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH RECURSIVE replacements (molecule_id, current_label, current_spos) AS (\n  SELECT molecule_id,\n         label::text,\n         strpos(label::text, '+')\n  FROM molecule\n  UNION ALL\n  SELECT r.molecule_id,\n         overlay(r.current_label placing '-' from r.current_spos for 1),\n         strpos(overlay(r.current_label placing '-' from r.current_spos for 1), '+')\n  FROM replacements r\n  WHERE r.current_spos > 0\nSELECT molecule_id,\n       current_label AS label\nFROM replacements\n\nWHERE current_spos",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Unbalanced parentheses or brackets",
+        "taxonomy_category": "syntax",
+        "context": "1 unclosed '('"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0813,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-WHERE-UNION",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "SELECT",
+        "UNION",
+        "WHERE",
+        "WITH"
+      ],
+      "tables": [
+        "molecule",
+        "replacements"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 1,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_437",
+    "db_id": "toxicology",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT a.atom_id, COUNT(c.atom_id2) as connection_count FROM atom a LEFT JOIN connected c ON a.atom_id = c.atom_id WHERE a.atom_id IN (SELECT atom_id FROM test WHERE atom_id LIKE 'TR%') GROUP BY a.atom_id",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'atom_id' is ambiguous \u2014 exists in tables: atom, connected",
+        "taxonomy_category": "semantic",
+        "context": "atom_id",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'atom_id' is ambiguous \u2014 exists in tables: atom, connected",
+        "taxonomy_category": "semantic",
+        "context": "atom_id",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_ambiguous_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1573,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE-GROUP-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "atom",
+        "connected",
+        "test"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_455",
+    "db_id": "debit_card_specializing",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT \"customerid\", \"date\", \"productid\", \"amount\" FROM \"transactions_1k\"\nWHERE (\"productid\" IN (2,5,9)) PIVOT(COUNT(\"amount\") FOR productid IN (2, 5, 9)) AS pivot_table;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_invalid_token",
+        "message": "Invalid expression / Unexpected token. Line 2, Col: 36.\n  T \"customerid\", \"date\", \"productid\", \"amount\" FROM \"transactions_1k\"\nWHERE (\"productid\" IN (2,5,9)) \u001b[4mPIVOT\u001b[0m(COUNT(\"amount\") FOR productid IN (2, 5, 9)) AS pivot_table;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_invalid_token"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0177,
+      "pattern_signature": "SELECT-FROM-WHERE",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "transactions_1k"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_457",
+    "db_id": "superhero",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT ???, s.superhero_name, p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id WHERE s.id IN (1, 2, 3)",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Required keyword: 'this' missing for <class 'sqlglot.expressions.Coalesce'>. Line 1, Col: 11.\n  SELECT ???\u001b[4m,\u001b[0m s.superhero_name, p.publisher_name FROM superhero s JOIN publisher p ON s.publisher_id = p.id WHERE",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0542,
+      "pattern_signature": "SELECT-FROM-JOIN-WHERE",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "publisher",
+        "superhero"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_460",
+    "db_id": "toxicology",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT atom_id FROM ( SELECT CASE WHEN element = 'cl' AND lead(element) OVER\n(ORDER BY atom_id) = 'c' THEN REPLACE(CONCAT(atom_id, lead(atom_id) OVER (ORDER BY atom_id)), ' ', '')\nWHEN element = 'cl' AND lead(element) OVER (ORDER BY atom_id) != 'c' THEN atom_id\nWHEN element = 'cl' AND lead(element) OVER (ORDER BY atom_id) IS NULL THEN atom_id, ROW_NUMBER()\nOVER (ORDER BY atom_id) AS row_num ) AS tmp5 WHERE atom_id IS NOT NULL;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Expected END after CASE. Line 4, Col: 82.\n  _id) != 'c' THEN atom_id\nWHEN element = 'cl' AND lead(element) OVER (ORDER BY atom_id) IS NULL THEN \u001b[4matom_id\u001b[0m, ROW_NUMBER()\nOVER (ORDER BY atom_id) AS row_num ) AS tmp5 WHERE atom_id IS NOT NULL;",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.1427,
+      "pattern_signature": "SELECT-FROM-WHERE-WINDOW-ORDER-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WINDOW"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 4
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_483",
+    "db_id": "thrombosis_prediction",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH PatientThrombosisHistory AS (SELECT e.ID, e.Thrombosis, ROW_NUMBER() OVER (PARTITION BY e.ID ORDER BY e.\"Examination Date\" DESC NULLS LAST) AS RecencyRank, COUNT(*) OVER (PARTITION BY e.ID) AS ExamCount FROM examination AS e WHERE NOT e.Thrombosis IS NULL), LabResults AS (SELECT l.ID, AVG(l.PLT) AS AvgPlateletCount, MAX(CASE WHEN l.PLT < 150 THEN 1 ELSE 0 END) AS HasLowPlatelets FROM laboratory AS l WHERE l.Date >= CURRENT_TIMESTAMP + INTERVAL '-1 YEAR' GROUP BY l.ID) SELECT p.ID AS Patient",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_ambiguous_col",
+        "message": "Column 'ID' is ambiguous \u2014 exists in tables: patient, examination",
+        "taxonomy_category": "semantic",
+        "context": "ID",
+        "affected_clauses": [
+          "WHERE"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'Examination Date' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "Examination Date",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_ambiguous_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2448,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-WINDOW-ORDER-LIMIT-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "LIMIT",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "examination",
+        "laboratory",
+        "labresults",
+        "patient",
+        "patientthrombosishistory"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 1,
+      "num_ctes": 2,
+      "num_aggregations": 3
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_488",
+    "db_id": "formula_1",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT RACEID, NAME, \"date\", LAG(RACEID) OVER (PARTITION BY YEAR ORDER BY \"date\" NULLS FIRST) AS PREVRACEID, LEAD(RACEID) OVER (PARTITION BY YEAR ORDER BY \"date\" NULLS FIRST) AS NEXTRACEID FROM races ORDER BY YEAR NULLS FIRST, \"date\" NULLS FIRST, \"non_existent_column\" NULLS FIRST",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'non_existent_column' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "non_existent_column",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0229,
+      "pattern_signature": "SELECT-FROM-WINDOW-ORDER",
+      "clauses_present": [
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "WINDOW"
+      ],
+      "tables": [
+        "races"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 2
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_499",
+    "db_id": "debit_card_specializing",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT\n    c.customerid,\n    (\n        SELECT\n            CAST(t.transactionid AS TEXT) AS transactionid\n        FROM transactions_1k t\n        WHERE t.customerid = c.customerid\n        FOR JSON PATH\n    ) AS transactions\nFROM customers c\nINNER JOIN transactions_1k t ON c.customerid = t.customerid\nWHERE segment = 'SME'\nFOR JSON PATH, WITHOUT_ARRAY_WRAPPER;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 8, Col: 11.\n  ) AS transactionid\n        FROM transactions_1k t\n        WHERE t.customerid = c.customerid\n        \u001b[4mFOR\u001b[0m JSON PATH\n    ) AS transactions\nFROM customers c\nINNER JOIN transactions_1k t ON c.customerid = t.c\n\nInvalid expression / Unexpected token. Line 8, Col: 11.\n  ) AS transactionid\n        FROM transactions_1k t\n        WHERE t.customerid = c.customerid\n        \u001b[4mFOR\u001b[0m JSON PATH\n    ) AS transactions\nFROM customers c\nINNER JOIN transactions_1k t ON c.customerid = t.c",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0969,
+      "pattern_signature": "SELECT-FROM-WHERE-SUBQUERY",
+      "clauses_present": [
+        "FROM",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE"
+      ],
+      "tables": [
+        "transactions_1k"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 1,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_502",
+    "db_id": "formula_1",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "SELECT name, value FROM races CROSS JOIN LATERAL unnest(string_to_array(name, ' ')) AS value PIVOT (GROUPING(name) as name FOR value in ('name1','name2','name3','name4')) piv;",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "value",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "value",
+        "affected_clauses": [
+          "JOIN"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0427,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_CROSS-LATERAL",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "JOIN_CROSS",
+        "LATERAL",
+        "SELECT"
+      ],
+      "tables": [
+        "races"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 1
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_505",
+    "db_id": "formula_1",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH RaceResults AS (\n\n    SELECT\n        r.raceId,\n        r.year,\n        r.date,\n        res.driverId,\n        res.points,\n\n        DENSE_RANK() OVER (PARTITION BY res.driverId, r.year ORDER BY r.date) AS SeasonRaceNumber,\n\n        ROW_NUMBER() OVER (PARTITION BY res.driverId ORDER BY r.year, r.date) AS CareerRaceNumber\n    FROM results res\n    JOIN races r ON res.raceId = r.raceId\n    WHERE res.position IS NOT NULL\n),\nDriverFirstFiveRaces AS (\n\n    SELECT\n        driverId,\n        year,\n    ",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'year' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "year",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'year' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "year",
+        "affected_clauses": [
+          "GROUP BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'year' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "year",
+        "affected_clauses": [
+          "ORDER BY"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'points' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "points",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'points' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "points",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'points' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "points",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'points' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "points",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      },
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'points' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "points",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col",
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.2021,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-JOIN-WHERE-GROUP-WINDOW-ORDER",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "GROUP",
+        "JOIN",
+        "ORDER",
+        "SELECT",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "driverfirstfiveraces",
+        "drivers",
+        "raceresults",
+        "races",
+        "results"
+      ],
+      "num_joins": 2,
+      "num_subqueries": 0,
+      "num_ctes": 2,
+      "num_aggregations": 6
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_510",
+    "db_id": "european_football_2",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "WITH CTE AS\n(\n    SELECT\n       pa.id,\n       xml_val = XMLPARSE(CONTENT '<t>' || REPLACE(pa.player_api_id::text, ',', '</t><t>') || '</t>'),\n       p.player_name as name\n    FROM player_attributes pa\n    INNER JOIN player p\n       ON ',' || pa.player_api_id::text || ','\n           LIKE '%,' || p.player_api_id::text || ',%'\n)\nSELECT\n    id,\n    name,\n    player_api_id = xpath('text()', col)::VARCHAR(100)\nFROM CTE\nCROSS JOIN LATERAL XMLTABLE('/t' PASSING xml_val COLUMNS col XML PATH '.') AS CA\nLI",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_unbalanced_tokens",
+        "message": "Expecting ). Line 5, Col: 39.\n  WITH CTE AS\n(\n    SELECT\n       pa.id,\n       xml_val = XMLPARSE(CONTENT \u001b[4m'<t>'\u001b[0m || REPLACE(pa.player_api_id::text, ',', '</t><t>') || '</t>'),\n       p.player_name as name\n    FRO\n\nExpecting ). Line 5, Col: 39.\n  WITH CTE AS\n(\n    SELECT\n       pa.id,\n       xml_val = XMLPARSE(CONTENT \u001b[4m'<t>'\u001b[0m || REPLACE(pa.player_api_id::text, ',', '</t><t>') || '</t>'),\n       p.player_name as name\n    FRO\n\ndpipe does not support CTE. Line 5, Col: 101.\n         xml_val = XMLPARSE(CONTENT '<t>' || REPLACE(pa.player_api_id::text, ',', '</t><t>') || '</t>'\u001b[4m)\u001b[0m,\n       p.player_name as name\n    FROM player_attributes pa\n    INNER JOIN player p\n       ON ',' |\n\n... and 1 more",
+        "taxonomy_category": "syntax",
+        "context": "Parser reported expecting parenthesis"
+      }
+    ],
+    "tags": [
+      "syntax_unbalanced_tokens"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0458,
+      "pattern_signature": "WITH-CTE-SELECT",
+      "clauses_present": [
+        "CTE",
+        "SELECT",
+        "WITH"
+      ],
+      "tables": [],
+      "num_joins": 0,
+      "num_subqueries": 0,
+      "num_ctes": 1,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_516",
+    "db_id": "thrombosis_prediction",
+    "category": "Personalization",
+    "sql_index": 0,
+    "sql": "SELECT ID, value FROM PATIENT CROSS JOIN LATERAL string_to_table(DIAGNOSIS, ',') AS s(value) WHERE DIAGNOSIS = 'SLE' || '; DROP TABLE PATIENT; --';",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "schema_hallucination_col",
+        "message": "Column 'value' does not exist in any referenced table",
+        "taxonomy_category": "semantic",
+        "context": "value",
+        "affected_clauses": [
+          "SELECT"
+        ]
+      }
+    ],
+    "tags": [
+      "schema_hallucination_col"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.0438,
+      "pattern_signature": "SELECT-FROM-JOIN-JOIN_CROSS-LATERAL-WHERE",
+      "clauses_present": [
+        "FROM",
+        "JOIN",
+        "JOIN_CROSS",
+        "LATERAL",
+        "SELECT",
+        "WHERE"
+      ],
+      "tables": [
+        "patient"
+      ],
+      "num_joins": 1,
+      "num_subqueries": 0,
+      "num_ctes": 0,
+      "num_aggregations": 0
+    }
+  },
+  {
+    "instance_id": "PostgreSQL_521",
+    "db_id": "financial",
+    "category": "Query",
+    "sql_index": 0,
+    "sql": "WITH PaymentRanks AS (SELECT payments, ROW_NUMBER() OVER (ORDER BY payments DESC NULLS LAST) AS row_num, DENSE_RANK() OVER (ORDER BY payments DESC NULLS LAST) AS dense_rank_num, COUNT(*) OVER () AS total_count FROM loan), DistinctPayments AS (SELECT COUNT( payments) AS distinct_payment_count FROM loan) SELECT CASE WHEN (SELECT COUNT(*) FROM loan) <= 2 THEN NULL WHEN (SELECT distinct_payment_count FROM distinctpayments) = 1 AND WHERE payments IS NOT NULL THEN NULL ELSE (SELECT payments FROM payme",
+    "valid": false,
+    "errors": [
+      {
+        "tag": "syntax_keyword_misuse",
+        "message": "Required keyword: 'expression' missing for <class 'sqlglot.expressions.And'>. Line 1, Col: 436.\n  UNT(*) FROM loan) <= 2 THEN NULL WHEN (SELECT distinct_payment_count FROM distinctpayments) = 1 AND \u001b[4mWHERE\u001b[0m payments IS NOT NULL THEN NULL ELSE (SELECT payments FROM paymentranks WHERE row_num = 1) END AS Se\n\nRequired keyword: 'true' missing for <class 'sqlglot.expressions.If'>. Line 1, Col: 436.\n  UNT(*) FROM loan) <= 2 THEN NULL WHEN (SELECT distinct_payment_count FROM distinctpayments) = 1 AND \u001b[4mWHERE\u001b[0m payments IS NOT NULL THEN NULL ELSE (SELECT payments FROM paymentranks WHERE row_num = 1) END AS Se\n\nExpected END after CASE. Line 1, Col: 430.\n  T COUNT(*) FROM loan) <= 2 THEN NULL WHEN (SELECT distinct_payment_count FROM distinctpayments) = 1 \u001b[4mAND\u001b[0m WHERE payments IS NOT NULL THEN NULL ELSE (SELECT payments FROM paymentranks WHERE row_num = 1) END\n\n... and 1 more",
+        "taxonomy_category": "syntax"
+      }
+    ],
+    "tags": [
+      "syntax_keyword_misuse"
+    ],
+    "query_metadata": {
+      "complexity_score": 0.176,
+      "pattern_signature": "WITH-CTE-SELECT-FROM-WHERE-WINDOW-ORDER-SUBQUERY",
+      "clauses_present": [
+        "CTE",
+        "FROM",
+        "ORDER",
+        "SELECT",
+        "SUBQUERY",
+        "WHERE",
+        "WINDOW",
+        "WITH"
+      ],
+      "tables": [
+        "distinctpayments",
+        "loan"
+      ],
+      "num_joins": 0,
+      "num_subqueries": 2,
+      "num_ctes": 2,
+      "num_aggregations": 4
+    }
+  }
+]
