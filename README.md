@@ -64,7 +64,7 @@ $$\color{#00BFFF}Features \space \color{#56565E}Included$$
 - Interactive setup flow, web UI, and benchmark runner
 
 <p align="center">
-    <img src="docs/flowchart.png" alt="Sequel2SQL system flowchart">
+    <img src="docs/deliverables/flowchart.png" alt="Sequel2SQL system flowchart">
     Flowchart illustrating the Sequel2SQL agent's reasoning process, tool usage, and retrieval components.
 </p>
 
