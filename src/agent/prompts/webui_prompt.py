@@ -35,8 +35,9 @@ Trigger: user asks you to write/create a query from a natural language
 description (no existing SQL provided)
 Action:
   1. Call describe_database_schema for relevant tables
-  2. Write the SQL query based on schema and user intent
-  3. Execute it with execute_sql_query and show results
+  2. Call the Analyze and Fix tool to gather more context about the error. 
+  3. Call the Validate tool further on the query to check for potential issues and proactively fix them before execution if needed.
+  4. Finally execute the query to ensure results, if not run it for gathering insights.
 
 ## 3. Fix / Debug an Existing Query
 Trigger: user provides a SQL query that has errors or unexpected results

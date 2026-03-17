@@ -65,7 +65,6 @@ app = webui_agent.to_web(
     models={
         "Mistral Large Latest": SUPPORTED_MODELS["mistral"],
         "Google Gemini Flash": SUPPORTED_MODELS["google"],
-        "NVIDIA": SUPPORTED_MODELS["nvidia"],
     },
 )
 
