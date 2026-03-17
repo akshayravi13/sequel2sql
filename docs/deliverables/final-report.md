@@ -496,7 +496,7 @@ These results demonstrate that **providing language models with structured debug
 
 The Gemini 3 Flash Preview model achieved a baseline success rate of **42%** when operating without external tools. When integrated with the Sequel2SQL agentic framework, its performance increased to **48%**, indicating that the model was able to leverage the system’s validation and retrieval capabilities to diagnose more complex SQL errors.
 
-Similarly, the Mistral Large 3 model showed substantial improvement when operating within the Sequel2SQL framework. Its baseline performance of **32%** increased to **40.43%**, representing a relative improvement of more than **25%** over the baseline configuration.
+Similarly, the Mistral Large 3 model showed substantial improvement when operating within the Sequel2SQL framework. Its baseline performance of **32%** decreased to **25%**, representing a drop in performance. This suggests that while the tool-augmented reasoning provided some benefits, the model may have struggled to effectively utilize the tools or may have been more prone to generating corrections that failed validation.
 
 Although human developers still outperform automated systems on this benchmark, the results show that **tool-augmented agents can meaningfully narrow the performance gap between LLMs and human SQL debugging capabilities**.
 
