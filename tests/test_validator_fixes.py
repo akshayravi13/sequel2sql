@@ -36,8 +36,7 @@ class TestCTEColumnHandling:
         """
         result = validate(sql, schema=SCHEMA)
         halluc_cols = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_COLUMN
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_COLUMN
         ]
         assert halluc_cols == [], (
             f"CTE-output column 'total_rev' should not be flagged: {halluc_cols}"
@@ -55,8 +54,7 @@ class TestCTEColumnHandling:
         """
         result = validate(sql, schema=SCHEMA)
         halluc_cols = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_COLUMN
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_COLUMN
         ]
         assert halluc_cols == [], (
             f"CTE-internal computed columns should not be flagged: {halluc_cols}"
@@ -73,8 +71,7 @@ class TestCTEColumnHandling:
         """
         result = validate(sql, schema=SCHEMA)
         halluc_cols = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_COLUMN
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_COLUMN
         ]
         assert len(halluc_cols) >= 1, (
             "Hallucinated column 'nonexistent_col' against base table 'users' should be caught"
@@ -95,8 +92,7 @@ class TestCTEColumnHandling:
         """
         result = validate(sql, schema=SCHEMA)
         halluc_cols = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_COLUMN
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_COLUMN
         ]
         assert halluc_cols == [], (
             f"Nested CTE columns should not be flagged: {halluc_cols}"
@@ -110,8 +106,7 @@ class TestCTEColumnHandling:
         """
         result = validate(sql, schema=SCHEMA)
         halluc_tables = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_TABLE
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_TABLE
         ]
         assert halluc_tables == [], (
             f"CTE alias 'my_cte' should not be flagged as missing table: {halluc_tables}"
@@ -131,10 +126,7 @@ class TestAmbiguousColumnDetection:
         # Both 'users' and 'orders' have 'id'
         sql = "SELECT id FROM users JOIN orders ON users.id = orders.user_id"
         result = validate(sql, schema=SCHEMA)
-        ambig_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.AMBIGUOUS_COLUMN
-        ]
+        ambig_errors = [e for e in result.errors if e.tag == ErrorTag.AMBIGUOUS_COLUMN]
         assert len(ambig_errors) >= 1, (
             "Unqualified 'id' in JOIN of users+orders should be flagged as ambiguous"
         )
@@ -143,10 +135,7 @@ class TestAmbiguousColumnDetection:
         """Qualified column reference should NOT be flagged as ambiguous."""
         sql = "SELECT users.id FROM users JOIN orders ON users.id = orders.user_id"
         result = validate(sql, schema=SCHEMA)
-        ambig_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.AMBIGUOUS_COLUMN
-        ]
+        ambig_errors = [e for e in result.errors if e.tag == ErrorTag.AMBIGUOUS_COLUMN]
         assert ambig_errors == [], (
             f"Qualified 'users.id' should not be ambiguous: {ambig_errors}"
         )
@@ -155,10 +144,7 @@ class TestAmbiguousColumnDetection:
         """Column existing in only one table should not be flagged."""
         sql = "SELECT email FROM users JOIN orders ON users.id = orders.user_id"
         result = validate(sql, schema=SCHEMA)
-        ambig_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.AMBIGUOUS_COLUMN
-        ]
+        ambig_errors = [e for e in result.errors if e.tag == ErrorTag.AMBIGUOUS_COLUMN]
         assert ambig_errors == [], (
             f"'email' only exists in users, should not be ambiguous: {ambig_errors}"
         )
@@ -171,10 +157,7 @@ class TestAmbiguousColumnDetection:
         JOIN products ON users.id = products.id
         """
         result = validate(sql, schema=SCHEMA)
-        ambig_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.AMBIGUOUS_COLUMN
-        ]
+        ambig_errors = [e for e in result.errors if e.tag == ErrorTag.AMBIGUOUS_COLUMN]
         assert len(ambig_errors) >= 1, (
             "'name' exists in both users and products, should be ambiguous"
         )
@@ -199,15 +182,13 @@ class TestPartialColumnCheck:
 
         # Should have the missing table error
         table_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_TABLE
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_TABLE
         ]
         assert len(table_errors) >= 1, "fake_table should be flagged as missing"
 
         # Should ALSO have the column error for nonexistent_col against users
         col_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_COLUMN
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_COLUMN
         ]
         assert len(col_errors) >= 1, (
             "nonexistent_col should be flagged even though fake_table is missing"
@@ -220,14 +201,14 @@ class TestPartialColumnCheck:
 
         # Missing table error should exist
         table_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_TABLE
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_TABLE
         ]
         assert len(table_errors) >= 1
 
         # Column error for fake_table.some_col should NOT exist (table already flagged)
         col_errors = [
-            e for e in result.errors
+            e
+            for e in result.errors
             if e.tag == ErrorTag.HALLUCINATION_COLUMN
             and "fake_table" in (e.context or "")
         ]
@@ -276,8 +257,7 @@ class TestExistingBehavior:
         sql = "SELECT sub.id FROM (SELECT id FROM users) AS sub"
         result = validate(sql, schema=SCHEMA)
         table_errors = [
-            e for e in result.errors
-            if e.tag == ErrorTag.HALLUCINATION_TABLE
+            e for e in result.errors if e.tag == ErrorTag.HALLUCINATION_TABLE
         ]
         assert table_errors == [], (
             f"Subquery alias 'sub' should not be flagged: {table_errors}"

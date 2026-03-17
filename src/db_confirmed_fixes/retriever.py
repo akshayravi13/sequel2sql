@@ -53,9 +53,9 @@ def _get_collection(database_name: str) -> chromadb.Collection:
     )
 
     collection = client.get_or_create_collection(
-        name=COLLECTION_NAME, 
+        name=COLLECTION_NAME,
         embedding_function=emb_fn,
-        metadata={"hnsw:space": "cosine"}
+        metadata={"hnsw:space": "cosine"},
     )
 
     _COLLECTION_CACHE[database_name] = collection
@@ -123,8 +123,11 @@ def save_confirmed_fix(
     }
 
     import logging
+
     logger = logging.getLogger("db_skills_benchmark")
-    logger.debug(f"ChromaDB Upsert -> Intent: {intent[:50]}... | Explanation: {explanation[:50]}...")
+    logger.debug(
+        f"ChromaDB Upsert -> Intent: {intent[:50]}... | Explanation: {explanation[:50]}..."
+    )
 
     collection.upsert(
         documents=[intent],
@@ -151,7 +154,7 @@ def find_similar_confirmed_fixes(
     """
     try:
         collection = _get_collection(database)
-        
+
         # Check if collection is empty
         if collection.count() == 0:
             return []
@@ -173,7 +176,7 @@ def find_similar_confirmed_fixes(
         candidates = []
         ids_to_increment = []
         metadatas_to_update = []
-        
+
         for doc, meta, dist, doc_id in zip(docs, metas, dists, ids):
             similarity = 1.0 - dist
             candidates.append(
@@ -195,10 +198,7 @@ def find_similar_confirmed_fixes(
         # Best-effort increment usage_count
         if ids_to_increment:
             try:
-                collection.update(
-                    ids=ids_to_increment,
-                    metadatas=metadatas_to_update
-                )
+                collection.update(ids=ids_to_increment, metadatas=metadatas_to_update)
             except Exception:
                 pass
 
@@ -237,57 +237,69 @@ def prune_confirmed_fixes(database: str, max_items: int = 500) -> int:
         for doc_id, meta in zip(ids, metas):
             usage_count = int(meta.get("usage_count", 0))
             confirmed_at_str = meta.get("confirmed_at", "")
-            
+
             age_days = 0.0
             if confirmed_at_str:
                 try:
                     # Parse ISO format. Handle Z explicitly if needed.
                     if confirmed_at_str.endswith("Z"):
                         confirmed_at_str = confirmed_at_str[:-1] + "+00:00"
-                    
+
                     confirmed_at = datetime.fromisoformat(confirmed_at_str)
-                    
+
                     # Ensure timezone awareness
                     if confirmed_at.tzinfo is None:
                         confirmed_at = confirmed_at.replace(tzinfo=timezone.utc)
-                        
+
                     delta = now - confirmed_at
                     age_days = delta.total_seconds() / (24 * 3600)
                 except Exception:
                     # Treat ambiguous age as 0
                     pass
-            
-            items.append({
-                "id": doc_id,
-                "usage_count": usage_count,
-                "age_days": age_days,
-            })
+
+            items.append(
+                {
+                    "id": doc_id,
+                    "usage_count": usage_count,
+                    "age_days": age_days,
+                }
+            )
 
         # Priority 1: usage_count == 0 AND age_days >= 30
-        tier_1 = [item for item in items if item["usage_count"] == 0 and item["age_days"] >= 30]
+        tier_1 = [
+            item
+            for item in items
+            if item["usage_count"] == 0 and item["age_days"] >= 30
+        ]
         # Priority 2: usage_count == 0 AND age_days >= 7
-        tier_2 = [item for item in items if item["usage_count"] == 0 and item["age_days"] >= 7]
+        tier_2 = [
+            item for item in items if item["usage_count"] == 0 and item["age_days"] >= 7
+        ]
         # Priority 3: usage_count == 1 AND age_days >= 90
-        tier_3 = [item for item in items if item["usage_count"] == 1 and item["age_days"] >= 90]
+        tier_3 = [
+            item
+            for item in items
+            if item["usage_count"] == 1 and item["age_days"] >= 90
+        ]
 
         # Order of deletion
         seen_ids = set()
         candidates = []
-        
+
         # Add tier 1 (sort older first)
         tier_1.sort(key=lambda x: x["age_days"], reverse=True)
         for item in tier_1:
             if item["id"] not in seen_ids:
                 candidates.append(item)
                 seen_ids.add(item["id"])
-        
+
         # Add tier 2 (sort older first, exclude already in list)
         tier_2.sort(key=lambda x: x["age_days"], reverse=True)
         for item in tier_2:
             if item["id"] not in seen_ids:
                 candidates.append(item)
                 seen_ids.add(item["id"])
-        
+
         # Add tier 3 (sort older first, exclude already in list)
         tier_3.sort(key=lambda x: x["age_days"], reverse=True)
         for item in tier_3:

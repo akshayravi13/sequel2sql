@@ -1,7 +1,10 @@
 import sys
 import os
+
 # Add src to sys.path
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 import json
 import logging
@@ -22,8 +25,8 @@ def process_dataset():
     logger.info("Loading BirdSQL mini_dev_pg dataset...")
     dataset = load_dataset("birdsql/bird_mini_dev", split="mini_dev_pg")
 
-    count = 0 
-    
+    count = 0
+
     logger.info(f"Writing {len(dataset)} records to {OUTPUT_FILE}")
 
     with OUTPUT_FILE.open("w", encoding="utf-8") as f:

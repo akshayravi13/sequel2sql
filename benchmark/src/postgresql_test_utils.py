@@ -50,7 +50,7 @@ def remove_distinct(sql_list):
     for query in sql_list:
         # Use regex to remove DISTINCT as a whole word (case-insensitive)
         # \b ensures word boundaries, so DISTINCTROW won't match
-        cleaned_query = re.sub(r'\bDISTINCT\b', '', query, flags=re.IGNORECASE)
+        cleaned_query = re.sub(r"\bDISTINCT\b", "", query, flags=re.IGNORECASE)
         cleaned_queries.append(cleaned_query)
     return cleaned_queries
 

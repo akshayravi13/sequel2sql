@@ -89,7 +89,7 @@ def parse_schema_from_ddl(ddl_text: str) -> Dict[str, Dict[str, str]]:
 
     # ── Pass 3: SELECT INTO creates a table too ──────────────────────────────
     select_into_pattern = re.compile(
-        r'SELECT\s+.+?\s+INTO\s+(?:TEMP(?:ORARY)?\s+)?(?:TABLE\s+)?\"?(\w+)\"?',
+        r"SELECT\s+.+?\s+INTO\s+(?:TEMP(?:ORARY)?\s+)?(?:TABLE\s+)?\"?(\w+)\"?",
         re.IGNORECASE | re.DOTALL,
     )
     for match in select_into_pattern.finditer(ddl_text):
@@ -118,7 +118,9 @@ def run_benchmark_validation(
     if limit:
         entries = entries[:limit]
 
-    print(f"Loaded {len(entries)} entries across {len(set(e['db_id'] for e in entries))} databases")
+    print(
+        f"Loaded {len(entries)} entries across {len(set(e['db_id'] for e in entries))} databases"
+    )
 
     # Parse schemas per db_id (cache to avoid re-parsing)
     schema_cache: Dict[str, Dict[str, Dict[str, str]]] = {}
@@ -160,17 +162,19 @@ def run_benchmark_validation(
                 result = validate(sql, schema=schema)
             except Exception as exc:
                 parse_fail_count += 1
-                results.append({
-                    "instance_id": instance_id,
-                    "db_id": db_id,
-                    "category": category,
-                    "sql_index": sql_idx,
-                    "sql": sql[:200],
-                    "valid": None,
-                    "exception": str(exc)[:200],
-                    "errors": [],
-                    "tags": [],
-                })
+                results.append(
+                    {
+                        "instance_id": instance_id,
+                        "db_id": db_id,
+                        "category": category,
+                        "sql_index": sql_idx,
+                        "sql": sql[:200],
+                        "valid": None,
+                        "exception": str(exc)[:200],
+                        "errors": [],
+                        "tags": [],
+                    }
+                )
                 continue
 
             if result.valid:
@@ -200,14 +204,14 @@ def run_benchmark_validation(
 
     # ── Summary stats ────────────────────────────────────────────────────────
     total = valid_count + error_count + parse_fail_count
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"VALIDATION RESULTS SUMMARY")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Total SQL queries:        {total}")
     print(f"  Valid (no errors):      {valid_count}")
     print(f"  Invalid (has errors):   {error_count}")
     print(f"  Parse exceptions:       {parse_fail_count}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Error breakdown by tag
     tag_counts: Dict[str, int] = {}
@@ -233,7 +237,7 @@ def run_benchmark_validation(
 
     print(f"\nPer-Database Breakdown:")
     print(f"  {'Database':<35s} {'Valid':>6s} {'Invalid':>8s}")
-    print(f"  {'-'*35} {'-'*6} {'-'*8}")
+    print(f"  {'-' * 35} {'-' * 6} {'-' * 8}")
     for db in sorted(db_error_counts.keys()):
         v, inv = db_error_counts[db]
         print(f"  {db:<35s} {v:>6d} {inv:>8d}")
@@ -251,7 +255,7 @@ def run_benchmark_validation(
 
     print(f"\nPer-Category Breakdown:")
     print(f"  {'Category':<25s} {'Valid':>6s} {'Invalid':>8s}")
-    print(f"  {'-'*25} {'-'*6} {'-'*8}")
+    print(f"  {'-' * 25} {'-' * 6} {'-' * 8}")
     for cat in sorted(cat_counts.keys()):
         v, inv = cat_counts[cat]
         print(f"  {cat:<25s} {v:>6d} {inv:>8d}")

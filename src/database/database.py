@@ -157,14 +157,29 @@ class Database:
         """
         _ALLOWED_FIRST_TOKENS = {"SELECT", "WITH", "EXPLAIN"}
         _WRITE_KEYWORDS = {
-            "INSERT", "UPDATE", "DELETE", "MERGE", "UPSERT",
-            "CREATE", "DROP", "ALTER", "TRUNCATE", "RENAME",
-            "GRANT", "REVOKE", "VACUUM", "REINDEX", "CLUSTER",
-            "COPY", "CALL", "DO",
+            "INSERT",
+            "UPDATE",
+            "DELETE",
+            "MERGE",
+            "UPSERT",
+            "CREATE",
+            "DROP",
+            "ALTER",
+            "TRUNCATE",
+            "RENAME",
+            "GRANT",
+            "REVOKE",
+            "VACUUM",
+            "REINDEX",
+            "CLUSTER",
+            "COPY",
+            "CALL",
+            "DO",
         }
 
         # Strip leading comments (-- and /* */) and whitespace
         import re
+
         cleaned = re.sub(r"--[^\n]*", "", sql_query)
         cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.DOTALL)
         cleaned = cleaned.strip()

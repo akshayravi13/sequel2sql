@@ -70,9 +70,7 @@ def run_retrieval_test():
 
     print(f"Testing retrieval for {len(benchmark_entries)} benchmark entries...")
     print("Querying ChromaDB directly (no similarity threshold)\n")
-    print(
-        f"{'ID':<18} {'DB':<25} {'Top-1 Sim':>10} {'Rank':>6}  {'Status'}"
-    )
+    print(f"{'ID':<18} {'DB':<25} {'Top-1 Sim':>10} {'Rank':>6}  {'Status'}")
     print("-" * 85)
 
     for entry in benchmark_entries:
@@ -123,9 +121,7 @@ def run_retrieval_test():
             status = "✗ NOT IN TOP-4"
             misses.append((instance_id, top_sim))
 
-        print(
-            f"{instance_id:<18} {db_id:<25} {top_sim:>10.4f} {rank:>6}  {status}"
-        )
+        print(f"{instance_id:<18} {db_id:<25} {top_sim:>10.4f} {rank:>6}  {status}")
 
     # Summary
     print("-" * 85)

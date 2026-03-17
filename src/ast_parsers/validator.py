@@ -31,6 +31,7 @@ def invalidate_schema_cache(engine) -> None:
     key = str(engine.url)
     _live_schema_cache.pop(key, None)
 
+
 import sqlglot
 from sqlglot import exp
 from sqlglot.errors import ErrorLevel, ParseError
@@ -176,13 +177,15 @@ def validate_with_db(
             msg_lower = e.message.lower() if e.message else ""
             # Pattern: relation "table_name" does not exist
             import re
+
             rel_match = re.search(r'relation "([^"]+)"', msg_lower)
             if rel_match:
                 missing_tables_from_explain.add(rel_match.group(1).lower())
 
     if missing_tables_from_explain:
         ast_schema_errors = [
-            e for e in ast_schema_errors
+            e
+            for e in ast_schema_errors
             if not (
                 e.tag == ErrorTag.HALLUCINATION_COLUMN
                 and e.context
@@ -335,22 +338,55 @@ def _check_schema(
     # ── PostgreSQL built-in SRFs and catalog objects used in FROM clauses ──────
     _PG_BUILTIN_SRFS = {
         # Set-returning functions commonly used in FROM
-        "generate_series", "unnest", "regexp_split_to_table",
-        "json_array_elements", "json_array_elements_text",
-        "jsonb_array_elements", "jsonb_array_elements_text",
-        "json_each", "json_each_text", "jsonb_each", "jsonb_each_text",
-        "json_to_record", "jsonb_to_record", "json_to_recordset", "jsonb_to_recordset",
-        "json_populate_record", "jsonb_populate_record",
-        "json_populate_recordset", "jsonb_populate_recordset",
-        "regexp_matches", "string_to_array", "xpath",
-        "ts_stat", "ts_token_type", "ts_parse",
-        "aclexplode", "pg_get_keywords", "pg_options_to_table",
+        "generate_series",
+        "unnest",
+        "regexp_split_to_table",
+        "json_array_elements",
+        "json_array_elements_text",
+        "jsonb_array_elements",
+        "jsonb_array_elements_text",
+        "json_each",
+        "json_each_text",
+        "jsonb_each",
+        "jsonb_each_text",
+        "json_to_record",
+        "jsonb_to_record",
+        "json_to_recordset",
+        "jsonb_to_recordset",
+        "json_populate_record",
+        "jsonb_populate_record",
+        "json_populate_recordset",
+        "jsonb_populate_recordset",
+        "regexp_matches",
+        "string_to_array",
+        "xpath",
+        "ts_stat",
+        "ts_token_type",
+        "ts_parse",
+        "aclexplode",
+        "pg_get_keywords",
+        "pg_options_to_table",
         # System catalog tables/views
-        "pg_class", "pg_attribute", "pg_constraint", "pg_namespace",
-        "pg_index", "pg_type", "pg_am", "pg_tablespace", "pg_stat_activity",
-        "pg_stat_user_tables", "pg_stat_all_tables", "pg_roles",
-        "pg_database", "pg_proc", "pg_description", "pg_depend",
-        "pg_catalog", "pg_tables", "pg_views", "pg_sequences",
+        "pg_class",
+        "pg_attribute",
+        "pg_constraint",
+        "pg_namespace",
+        "pg_index",
+        "pg_type",
+        "pg_am",
+        "pg_tablespace",
+        "pg_stat_activity",
+        "pg_stat_user_tables",
+        "pg_stat_all_tables",
+        "pg_roles",
+        "pg_database",
+        "pg_proc",
+        "pg_description",
+        "pg_depend",
+        "pg_catalog",
+        "pg_tables",
+        "pg_views",
+        "pg_sequences",
     }
 
     # ── Collect CTE aliases so they are never flagged as missing tables ────────
@@ -435,7 +471,8 @@ def _check_schema(
     # CTE/subquery aliases, missing tables, and tables with unknown columns
     # (empty dict from CTAS parsing) are excluded.
     schema_tables: Set[str] = {
-        t for t in outer_tables
+        t
+        for t in outer_tables
         if t in schema_lower
         and t not in missing_tables_lower
         and len(schema_lower[t]) > 0  # skip tables with unknown columns
@@ -518,8 +555,7 @@ def _check_schema(
                 continue
 
             found_in = [
-                t for t in schema_tables
-                if col_lower in schema_lower.get(t, {})
+                t for t in schema_tables if col_lower in schema_lower.get(t, {})
             ]
 
             if not found_in:

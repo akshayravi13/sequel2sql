@@ -60,11 +60,15 @@ WHERE o.total > (SELECT AVG(total) FROM orders)
 ORDER BY o.total DESC
 """
 
+
 def run_one(label: str, sql: str, use_schema: bool = True) -> None:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  {label}")
-    print(f"{'='*60}")
-    print("SQL (first 200 chars):", sql.strip()[:200] + "..." if len(sql) > 200 else sql.strip())
+    print(f"{'=' * 60}")
+    print(
+        "SQL (first 200 chars):",
+        sql.strip()[:200] + "..." if len(sql) > 200 else sql.strip(),
+    )
     print()
 
     # Syntax
@@ -79,7 +83,12 @@ def run_one(label: str, sql: str, use_schema: bool = True) -> None:
         comp = calculate_complexity(syn.ast)
         sig = generate_pattern_signature(syn.ast)
         print("  Clauses:", ", ".join(clauses[:12]), "..." if len(clauses) > 12 else "")
-        print("  Complexity:", comp, "| Signature:", sig[:60] + "..." if len(sig) > 60 else sig)
+        print(
+            "  Complexity:",
+            comp,
+            "| Signature:",
+            sig[:60] + "..." if len(sig) > 60 else sig,
+        )
 
     # Schema (if requested)
     if use_schema:
@@ -95,15 +104,24 @@ def run_one(label: str, sql: str, use_schema: bool = True) -> None:
     # Error context from a fake “exception” (message only)
     class FakeErr:
         def __str__(self):
-            return "ERROR: 42703: column \"nonexistent\" does not exist"
+            return 'ERROR: 42703: column "nonexistent" does not exist'
+
     ctx = build_error_context(sql, ast=syn.ast if syn.ast else None, error=FakeErr())
-    print("ErrorContext (fake 42703): sqlstate =", ctx.sqlstate, "| tags =", [t.tag for t in ctx.tags][:5], "..." if len(ctx.tags) > 5 else [t.tag for t in ctx.tags])
+    print(
+        "ErrorContext (fake 42703): sqlstate =",
+        ctx.sqlstate,
+        "| tags =",
+        [t.tag for t in ctx.tags][:5],
+        "..." if len(ctx.tags) > 5 else [t.tag for t in ctx.tags],
+    )
+
 
 def main():
     print("Complex query tests (syntax + schema + error context)")
     run_one("Query 1: CTEs, joins, aggregation, subquery, ORDER BY, LIMIT", QUERY_1)
     run_one("Query 2: Subqueries, JOIN, correlated subquery, ORDER BY", QUERY_2)
     print("\nDone.")
+
 
 if __name__ == "__main__":
     main()

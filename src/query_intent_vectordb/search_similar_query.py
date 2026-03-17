@@ -216,7 +216,7 @@ def select_diverse_examples_from_chroma_results(
 
 def find_similar_examples(
     intent: str,
-    #sql_query: str,
+    # sql_query: str,
     n_results: int = 6,
 ) -> List[FewShotExample]:
     """
