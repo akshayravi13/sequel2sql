@@ -182,9 +182,7 @@ tests/                         Unit tests and benchmark helpers
 
 $$\color{#00BFFF}Project \space \color{#56565E}Demo$$
 
-![Project demo](https://media2.giphy.com/media/v1.Y2lkPTZjMDliOTUycDUybHhzNHYxbW1hYTQ5bnd5MHRyMjQzbHU5MnNobDZ3NDc3M3dzYyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/11sBLVxNs7v6WA/giphy.gif)
-
-Demo video and polished walkthrough material are still being expanded as the docs site comes together. For now, the final report in `docs/` and the web UI flow are the best ways to see the full system in action.
+https://github.com/user-attachments/assets/6a3822dc-6909-49c4-a51c-974bff34bcd6
 
 ## 🧪 Benchmark
 
