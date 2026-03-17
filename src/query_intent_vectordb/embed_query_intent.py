@@ -29,13 +29,10 @@ def embed_and_store() -> None:
     CHROMA_PATH.mkdir(parents=True, exist_ok=True)
 
     logger.info("Initializing *persistent* ChromaDB...")
-    client = chromadb.PersistentClient(
-        path=str(CHROMA_PATH)
-    )
+    client = chromadb.PersistentClient(path=str(CHROMA_PATH))
 
     collection = client.get_or_create_collection(
-        name=COLLECTION_NAME,
-        metadata={"hnsw:space": "cosine"}
+        name=COLLECTION_NAME, metadata={"hnsw:space": "cosine"}
     )
 
     documents: list[str] = []

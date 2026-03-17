@@ -25,6 +25,7 @@ from src.agent.sqlagent import (
     get_database_deps,
     webui_agent,
 )
+from src.webui import create_branded_web_app
 
 # Load environment variables
 load_dotenv()
@@ -60,12 +61,12 @@ except Exception as e:
 # Web Application
 # =============================================================================
 
-app = webui_agent.to_web(
+app = create_branded_web_app(
+    agent=webui_agent,
     deps=deps,
     models={
         "Mistral Large Latest": SUPPORTED_MODELS["mistral"],
         "Google Gemini Flash": SUPPORTED_MODELS["google"],
-        "NVIDIA": SUPPORTED_MODELS["nvidia"],
     },
 )
 

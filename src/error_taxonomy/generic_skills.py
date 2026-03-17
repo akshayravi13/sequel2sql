@@ -38,5 +38,3 @@ def get_error_taxonomy_skill(error_category: str) -> str:
             "Use general SQL debugging approach."
         )
     return skill_path.read_text(encoding="utf-8")
-
-

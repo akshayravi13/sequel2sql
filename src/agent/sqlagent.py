@@ -56,27 +56,7 @@ SUPPORTED_MODELS = {
     "mistral": "mistral:mistral-large-latest",
     "google": "google-gla:gemini-3-flash-preview",
     "codestral": "mistral:codestral-latest",
-    "nvidia": "deepseek-ai/deepseek-v3.2",
 }
-
-
-def _build_nvidia_model() -> OpenAIChatModel:
-    """Build an OpenAIChatModel pointed at the NVIDIA NIM API."""
-    nvidia_api_key = os.environ.get("NVIDIA_API_KEY", "")
-    if not nvidia_api_key:
-        raise ValueError(
-            "NVIDIA_API_KEY is not set in the environment. "
-            "Please add it to your .env file."
-        )
-    nvidia_client = AsyncOpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=nvidia_api_key,
-    )
-    return OpenAIChatModel(
-        "deepseek-ai/deepseek-v3.2",
-        provider=OpenAIProvider(openai_client=nvidia_client),
-    )
-
 
 # Pick DEFAULT_MODEL value from .env, default to Mistral if not set or invalid
 DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "mistral").lower()
@@ -248,7 +228,7 @@ agent = Agent(
 webui_agent = Agent(
     DEFAULT_MODEL,
     deps_type=AgentDeps,
-    system_prompt=WEBUI_PROMPT,
+    instructions=WEBUI_PROMPT,
     toolsets=[skills_toolset],
 )
 

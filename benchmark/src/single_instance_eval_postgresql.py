@@ -244,7 +244,7 @@ def evaluate_instance(data, args, logger):
             if db_connection:
                 break
         except Exception as e:
-            logger.error(f"Failed to get connection on attempt {attempt+1}: {e}")
+            logger.error(f"Failed to get connection on attempt {attempt + 1}: {e}")
             if attempt == max_retries - 1:
                 return {
                     "instance_id": instance_id,
@@ -260,7 +260,6 @@ def evaluate_instance(data, args, logger):
             time.sleep(3)  # Wait before retry
 
     try:
-
         db_connection = get_connection_for_phase(db_name, logger)
 
         # ---------- Evaluation Phase ----------
