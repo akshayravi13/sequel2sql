@@ -228,7 +228,7 @@ agent = Agent(
 webui_agent = Agent(
     DEFAULT_MODEL,
     deps_type=AgentDeps,
-    system_prompt=WEBUI_PROMPT,
+    instructions=WEBUI_PROMPT,
     toolsets=[skills_toolset],
 )
 

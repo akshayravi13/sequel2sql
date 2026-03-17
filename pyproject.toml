@@ -36,6 +36,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.14",
+    "pymdown-extensions>=10.16",
     "pytest>=7.0.0",
 ]
 
@@ -45,5 +48,8 @@ pythonpath = ["src"]
 
 [dependency-groups]
 dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.14",
+    "pymdown-extensions>=10.16",
     "pytest>=9.0.2",
 ]
